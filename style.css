@@ -1,0 +1,23 @@
+#carroImagem {
+    width: 200px;
+    float: left;
+    margin-right: 20px;
+}
+
+#mensagens {
+    width: 200px;
+    height: 150px;
+    border: 1px solid #ccc;
+    padding: 5px;
+    overflow-y: auto;
+}
+
+#infoCarro {
+    margin-top: 10px;
+    clear: both;
+}
+
+button {
+    padding: 5px 10px;
+    margin-right: 5px;
+}

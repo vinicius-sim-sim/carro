@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carro Interativo</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>Meu Carro</h1>
+
+    <img id="carroImagem" src="carro.avif" alt="Imagem do Carro">
+    <div id="mensagens"></div>
+
+    <div id="infoCarro">
+        <p>Modelo: <span id="modeloCarro"></span></p>
+        <p>Cor: <span id="corCarro"></span></p>
+        <p>Velocidade: <span id="velocidadeCarro">0</span> km/h</p>
+    </div>
+
+    <div id="controles">
+        <button id="ligarBtn">Ligar</button>
+        <button id="desligarBtn">Desligar</button>
+        <button id="acelerarBtn">Acelerar</button>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

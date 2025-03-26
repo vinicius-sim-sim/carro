@@ -18,4 +18,9 @@ class CarroEsportivo extends Carro {
       this.turboAtivado = false;
       console.log("Turbo desativado!");
     }
+
+    exibirInformacoes() {
+      const infoBase = super.exibirInformacoes(); // Obtém informações da classe pai
+      return `${infoBase}, Turbo: ${this.turboAtivado ? 'Ativado' : 'Desativado'}`;
   }
+}

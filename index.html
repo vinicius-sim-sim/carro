@@ -59,6 +59,48 @@
         <div id="outputCaminhao" class="output"></div>
       </div>
 
+      <div id="informacoesVeiculo"></div>
+
+    <button onclick="exibirInformacoes('meuCarro')">Exibir Informações do Carro</button>
+    <button onclick="exibirInformacoes('carroEsportivo')">Exibir Informações do Carro Esportivo</button>
+    <button onclick="exibirInformacoes('caminhao')">Exibir Informações do Caminhão</button>
+
+     <div class="container">
+        <h2>Carro Esportivo</h2>
+        <label for="modeloEsportivo">Modelo:</label>
+        <input type="text" id="modeloEsportivo" value="Ferrari"><br><br>
+        <label for="corEsportivo">Cor:</label>
+        <input type="text" id="corEsportivo" value="Vermelha"><br><br>
+        <button onclick="criarCarroEsportivo()">Criar Carro Esportivo</button><br><br>
+        <button onclick="ligarCarroEsportivo()">Ligar</button>
+        <button onclick="desligarCarroEsportivo()">Desligar</button>
+        <button onclick="acelerarCarroEsportivo()">Acelerar</button>
+        <button onclick="frearCarroEsportivo()">Frear</button>
+        <button onclick="ativarTurbo()">Ativar Turbo</button>
+        <button onclick="desativarTurbo()">Desativar Turbo</button>
+        <div id="outputEsportivo" class="output"></div>
+      </div>
+
+      <div class="container">
+        <h2>Caminhão</h2>
+        <label for="modeloCaminhao">Modelo:</label>
+        <input type="text" id="modeloCaminhao" value="Volvo"><br><br>
+        <label for="corCaminhao">Cor:</label>
+        <input type="text" id="corCaminhao" value="Azul"><br><br>
+        <label for="capacidadeCaminhao">Capacidade (kg):</label>
+        <input type="number" id="capacidadeCaminhao" value="10000"><br><br>
+        <button onclick="criarCaminhao()">Criar Caminhão</button><br><br>
+        <button onclick="ligarCaminhao()">Ligar</button>
+        <button onclick="desligarCaminhao()">Desligar</button>
+        <button onclick="acelerarCaminhao()">Acelerar</button>
+        <button onclick="frearCaminhao()">Frear</button>
+        <label for="carga">Carga (kg):</label>
+        <input type="number" id="carga" value="1000">
+        <button onclick="carregarCaminhao()">Carregar</button>
+        <button onclick="descarregarCaminhao()">Descarregar</button>
+        <div id="outputCaminhao" class="output"></div>
+      </div>
+
 
 </body>
 </html>
@@ -69,12 +111,13 @@
     let carroEsportivo;
     let caminhao;
 
+
     function criarCarroEsportivo() {
-      const modelo = document.getElementById("modeloEsportivo").value;
-      const cor = document.getElementById("corEsportivo").value;
-      carroEsportivo = new CarroEsportivo(modelo, cor);
-      atualizarOutputEsportivo();
-    }
+  const modelo = document.getElementById("modeloEsportivo").value;
+  const cor = document.getElementById("corEsportivo").value;
+  carroEsportivo = new CarroEsportivo(modelo, cor);
+  atualizarOutputEsportivo();
+}
 
     function ligarCarroEsportivo() {
         if(carroEsportivo) {
@@ -119,12 +162,12 @@
     }
 
     function criarCaminhao() {
-      const modelo = document.getElementById("modeloCaminhao").value;
-      const cor = document.getElementById("corCaminhao").value;
-      const capacidade = parseInt(document.getElementById("capacidadeCaminhao").value);
-      caminhao = new Caminhao(modelo, cor, capacidade);
-      atualizarOutputCaminhao();
-    }
+  const modelo = document.getElementById("modeloCaminhao").value;
+  const cor = document.getElementById("corCaminhao").value;
+  const capacidade = parseInt(document.getElementById("capacidadeCaminhao").value);
+  caminhao = new Caminhao(modelo, cor, capacidade);
+  atualizarOutputCaminhao();
+}
 
     function ligarCaminhao() {
         if (caminhao) {

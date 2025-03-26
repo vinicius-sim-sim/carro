@@ -44,10 +44,11 @@ class Carro {
         }
         console.log(`Freando. Velocidade atual: ${this.velocidade}`);
       }
-}
 
-// Criação de um objeto Carro
-const meuCarro = new Carro("Sedan", "Vermelho");
+      exibirInformacoes() {
+        return `Modelo: ${this.modelo}, Cor: ${this.cor}, Ligado: ${this.ligado ? 'Sim' : 'Não'}, Velocidade: ${this.velocidade} km/h`;
+    }
+}
 
 // Exibição das informações do carro na página
 document.getElementById("modeloCarro").textContent = meuCarro.modelo;
@@ -70,3 +71,23 @@ document.getElementById("desligarBotao").addEventListener("click", function() {
 document.getElementById("acelerarBotao").addEventListener("click", function() {
     meuCarro.acelerar();
 });
+const meuCarro = new Veiculo("Sedan", "Vermelho");
+let carroEsportivo;
+let caminhao;
+
+function exibirInformacoes(tipoVeiculo) {
+    let veiculo;
+
+    if (tipoVeiculo === 'meuCarro') {
+        veiculo = meuCarro;
+    } else if (tipoVeiculo === 'carroEsportivo' && carroEsportivo) {
+        veiculo = carroEsportivo;
+    } else if (tipoVeiculo === 'caminhao' && caminhao) {
+        veiculo = caminhao;
+    } else {
+        document.getElementById("informacoesVeiculo").textContent = "Veículo não criado ou não selecionado.";
+        return;
+    }
+
+    document.getElementById("informacoesVeiculo").textContent = veiculo.exibirInformacoes();
+}

@@ -22,4 +22,9 @@ class Caminhao extends Carro {
            console.log("Não é possível descarregar mais do que a carga atual.");
        }
     }
+
+    exibirInformacoes() {
+      const infoBase = super.exibirInformacoes(); // Obtém informações da classe pai
+      return `${infoBase}, Capacidade de Carga: ${this.capacidadeCarga} kg, Carga Atual: ${this.cargaAtual} kg`;
+  }
   }

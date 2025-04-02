@@ -14,6 +14,7 @@ class Carro {
         } else {
             console.log("O carro já está ligado.");
         }
+        // Opcional: Atualizar a exibição do status 'ligado' se houver um elemento para isso
     }
 
     desligar() {
@@ -25,6 +26,7 @@ class Carro {
         } else {
             console.log("O carro já está desligado.");
         }
+         // Opcional: Atualizar a exibição do status 'ligado' se houver um elemento para isso
     }
 
     acelerar() {
@@ -37,12 +39,17 @@ class Carro {
         }
     }
 
-    frear(decremento) {
-        this.velocidade -= decremento;
-        if (this.velocidade < 0) {
-          this.velocidade = 0; // Impede velocidade negativa
+    frear(decremento = 5) { // Valor padrão para decremento, caso não seja passado
+        if (this.ligado) { // Só pode frear se estiver ligado (faz sentido?)
+           this.velocidade -= decremento;
+           if (this.velocidade < 0) {
+             this.velocidade = 0; // Impede velocidade negativa
+           }
+           atualizarVelocidadeNaTela(); // Atualiza a velocidade na tela
+           console.log(`Freando. Velocidade atual: ${this.velocidade} km/h`);
+        } else {
+            console.log("O carro está desligado.");
         }
-        console.log(`Freando. Velocidade atual: ${this.velocidade}`);
       }
 
       exibirInformacoes() {
@@ -50,44 +57,3 @@ class Carro {
     }
 }
 
-// Exibição das informações do carro na página
-document.getElementById("modeloCarro").textContent = meuCarro.modelo;
-document.getElementById("corCarro").textContent = meuCarro.cor;
-
-// Funções para atualizar a velocidade na tela
-function atualizarVelocidadeNaTela() {
-    document.getElementById("velocidadeCarro").textContent = meuCarro.velocidade;
-}
-
-// Adicionando eventos aos botões
-document.getElementById("ligarBotao").addEventListener("click", function() {
-    meuCarro.ligar();
-});
-
-document.getElementById("desligarBotao").addEventListener("click", function() {
-    meuCarro.desligar();
-});
-
-document.getElementById("acelerarBotao").addEventListener("click", function() {
-    meuCarro.acelerar();
-});
-const meuCarro = new Veiculo("Sedan", "Vermelho");
-let carroEsportivo;
-let caminhao;
-
-function exibirInformacoes(tipoVeiculo) {
-    let veiculo;
-
-    if (tipoVeiculo === 'meuCarro') {
-        veiculo = meuCarro;
-    } else if (tipoVeiculo === 'carroEsportivo' && carroEsportivo) {
-        veiculo = carroEsportivo;
-    } else if (tipoVeiculo === 'caminhao' && caminhao) {
-        veiculo = caminhao;
-    } else {
-        document.getElementById("informacoesVeiculo").textContent = "Veículo não criado ou não selecionado.";
-        return;
-    }
-
-    document.getElementById("informacoesVeiculo").textContent = veiculo.exibirInformacoes();
-}

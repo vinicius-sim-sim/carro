@@ -1,237 +1,209 @@
-
 <html>
+
 <head>
-    <title>Carro Interativo</title>
-    <link rel="stylesheet" href="style.css">
+  <title>Carro Interativo</title>
+  <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
-    <h1>Meu Carro</h1>
-    <img src="Imagens/carro.jpg" alt="#">
-    <audio controls>
-        <source src="Audio/O V12 mais afinado que você vai ouvir. Aventador com Secret Weapon. (online-audio-converter.com).wav" Type="Ligar">
-    </audio>
-    <p>Modelo: <span id="modeloCarro"></span></p>
-    <p>Cor: <span id="corCarro"></span></p>
-    <p>Velocidade: <span id="velocidadeCarro">0</span> km/h</p>
+  <h1>Meu Carro</h1>
+  <img src="Imagens/carro.jpg" alt="#">
+  <audio controls>
+    <source
+      src="Audio/O V12 mais afinado que você vai ouvir. Aventador com Secret Weapon. (online-audio-converter.com).wav"
+      Type="Ligar">
+  </audio>
+  <p>Modelo: <span id="modeloCarro"></span></p>
+  <p>Cor: <span id="corCarro"></span></p>
+  <p>Velocidade: <span id="velocidadeCarro">0</span> km/h</p>
 
-    <button id="ligarBotao">Ligar</button>
-    <button id="desligarBotao">Desligar</button>
-    <button id="acelerarBotao">Acelerar</button>
+  <button id="ligarBotao">Ligar</button>
+  <button id="desligarBotao">Desligar</button>
+  <button id="acelerarBotao">Acelerar</button>
 
-    <script src="carro.js"></script>
-    <script src="esportivo.js"></script>
-    <script src="caminhao.js"></script>
+  <script src="carro.js"></script>
+  <script src="esportivo.js"></script>
+  <script src="caminhao.js"></script>
+  <script src="script.js"></script>
 
 
-    <div class="container">
-        <h2>Carro Esportivo</h2>
-        <label for="modeloEsportivo">Modelo:</label>
-        <input type="text" id="modeloEsportivo" value="Ferrari"><br><br>
-        <label for="corEsportivo">Cor:</label>
-        <input type="text" id="corEsportivo" value="Vermelha"><br><br>
-        <button onclick="criarCarroEsportivo()">Criar Carro Esportivo</button><br><br>
-        <button onclick="ligarCarroEsportivo()">Ligar</button>
-        <button onclick="desligarCarroEsportivo()">Desligar</button>
-        <button onclick="acelerarCarroEsportivo()">Acelerar</button>
-        <button onclick="frearCarroEsportivo()">Frear</button>
-        <button onclick="ativarTurbo()">Ativar Turbo</button>
-        <button onclick="desativarTurbo()">Desativar Turbo</button>
-        <div id="outputEsportivo" class="output"></div>
-      </div>
+  <div class="container">
+    <h2>Carro Esportivo</h2>
+    <label for="modeloEsportivo">Modelo:</label>
+    <input type="text" id="modeloEsportivo" value="Ferrari"><br><br>
+    <label for="corEsportivo">Cor:</label>
+    <input type="text" id="corEsportivo" value="Vermelha"><br><br>
+    <button onclick="criarCarroEsportivo()">Criar Carro Esportivo</button><br><br>
+    <button onclick="ligarCarroEsportivo()">Ligar</button>
+    <button onclick="desligarCarroEsportivo()">Desligar</button>
+    <button onclick="acelerarCarroEsportivo()">Acelerar</button>
+    <button onclick="frearCarroEsportivo()">Frear</button>
+    <button onclick="ativarTurbo()">Ativar Turbo</button>
+    <button onclick="desativarTurbo()">Desativar Turbo</button>
+    <div id="outputEsportivo" class="output"></div>
+  </div>
 
-      <div class="container">
-        <h2>Caminhão</h2>
-        <label for="modeloCaminhao">Modelo:</label>
-        <input type="text" id="modeloCaminhao" value="Volvo"><br><br>
-        <label for="corCaminhao">Cor:</label>
-        <input type="text" id="corCaminhao" value="Azul"><br><br>
-        <label for="capacidadeCaminhao">Capacidade (kg):</label>
-        <input type="number" id="capacidadeCaminhao" value="10000"><br><br>
-        <button onclick="criarCaminhao()">Criar Caminhão</button><br><br>
-        <button onclick="ligarCaminhao()">Ligar</button>
-        <button onclick="desligarCaminhao()">Desligar</button>
-        <button onclick="acelerarCaminhao()">Acelerar</button>
-        <button onclick="frearCaminhao()">Frear</button>
-        <label for="carga">Carga (kg):</label>
-        <input type="number" id="carga" value="1000">
-        <button onclick="carregarCaminhao()">Carregar</button>
-        <button onclick="descarregarCaminhao()">Descarregar</button>
-        <div id="outputCaminhao" class="output"></div>
-      </div>
+  <div class="container">
+    <h2>Caminhão</h2>
+    <label for="modeloCaminhao">Modelo:</label>
+    <input type="text" id="modeloCaminhao" value="Volvo"><br><br>
+    <label for="corCaminhao">Cor:</label>
+    <input type="text" id="corCaminhao" value="Azul"><br><br>
+    <label for="capacidadeCaminhao">Capacidade (kg):</label>
+    <input type="number" id="capacidadeCaminhao" value="10000"><br><br>
+    <button onclick="criarCaminhao()">Criar Caminhão</button><br><br>
+    <button onclick="ligarCaminhao()">Ligar</button>
+    <button onclick="desligarCaminhao()">Desligar</button>
+    <button onclick="acelerarCaminhao()">Acelerar</button>
+    <button onclick="frearCaminhao()">Frear</button>
+    <label for="carga">Carga (kg):</label>
+    <input type="number" id="carga" value="1000">
+    <button onclick="carregarCaminhao()">Carregar</button>
+    <button onclick="descarregarCaminhao()">Descarregar</button>
+    <div id="outputCaminhao" class="output"></div>
+  </div>
 
-      <div id="informacoesVeiculo"></div>
+  <div id="informacoesVeiculo"></div>
 
-    <button onclick="exibirInformacoes('meuCarro')">Exibir Informações do Carro</button>
-    <button onclick="exibirInformacoes('carroEsportivo')">Exibir Informações do Carro Esportivo</button>
-    <button onclick="exibirInformacoes('caminhao')">Exibir Informações do Caminhão</button>
-
-     <div class="container">
-        <h2>Carro Esportivo</h2>
-        <label for="modeloEsportivo">Modelo:</label>
-        <input type="text" id="modeloEsportivo" value="Ferrari"><br><br>
-        <label for="corEsportivo">Cor:</label>
-        <input type="text" id="corEsportivo" value="Vermelha"><br><br>
-        <button onclick="criarCarroEsportivo()">Criar Carro Esportivo</button><br><br>
-        <button onclick="ligarCarroEsportivo()">Ligar</button>
-        <button onclick="desligarCarroEsportivo()">Desligar</button>
-        <button onclick="acelerarCarroEsportivo()">Acelerar</button>
-        <button onclick="frearCarroEsportivo()">Frear</button>
-        <button onclick="ativarTurbo()">Ativar Turbo</button>
-        <button onclick="desativarTurbo()">Desativar Turbo</button>
-        <div id="outputEsportivo" class="output"></div>
-      </div>
-
-      <div class="container">
-        <h2>Caminhão</h2>
-        <label for="modeloCaminhao">Modelo:</label>
-        <input type="text" id="modeloCaminhao" value="Volvo"><br><br>
-        <label for="corCaminhao">Cor:</label>
-        <input type="text" id="corCaminhao" value="Azul"><br><br>
-        <label for="capacidadeCaminhao">Capacidade (kg):</label>
-        <input type="number" id="capacidadeCaminhao" value="10000"><br><br>
-        <button onclick="criarCaminhao()">Criar Caminhão</button><br><br>
-        <button onclick="ligarCaminhao()">Ligar</button>
-        <button onclick="desligarCaminhao()">Desligar</button>
-        <button onclick="acelerarCaminhao()">Acelerar</button>
-        <button onclick="frearCaminhao()">Frear</button>
-        <label for="carga">Carga (kg):</label>
-        <input type="number" id="carga" value="1000">
-        <button onclick="carregarCaminhao()">Carregar</button>
-        <button onclick="descarregarCaminhao()">Descarregar</button>
-        <div id="outputCaminhao" class="output"></div>
-      </div>
-
+  <button onclick="exibirInformacoes('meuCarro')">Exibir Informações do Carro</button>
+  <button onclick="exibirInformacoes('carroEsportivo')">Exibir Informações do Carro Esportivo</button>
+  <button onclick="exibirInformacoes('caminhao')">Exibir Informações do Caminhão</button>
 
 </body>
+
 </html>
 
-<script>
-    // Inclua o código JavaScript (Carro, CarroEsportivo, Caminhao) aqui
+<!-- <script src="carro.js"></script>
+<script src="esportivo.js"></script>
+<script src="caminhao.js"></script> -->
 
-    let carroEsportivo;
-    let caminhao;
+<!-- <script>
+  // Inclua o código JavaScript (Carro, CarroEsportivo, Caminhao) aqui
+
+  let carroEsportivo;
+  let caminhao;
 
 
-    function criarCarroEsportivo() {
-  const modelo = document.getElementById("modeloEsportivo").value;
-  const cor = document.getElementById("corEsportivo").value;
-  carroEsportivo = new CarroEsportivo(modelo, cor);
-  atualizarOutputEsportivo();
-}
+  function criarCarroEsportivo() {
+    const modelo = document.getElementById("modeloEsportivo").value;
+    const cor = document.getElementById("corEsportivo").value;
+    carroEsportivo = new CarroEsportivo(modelo, cor);
+    atualizarOutputEsportivo();
+  }
 
-    function ligarCarroEsportivo() {
-        if(carroEsportivo) {
-            carroEsportivo.ligar();
-            atualizarOutputEsportivo();
-        }
+  function ligarCarroEsportivo() {
+    if (carroEsportivo) {
+      carroEsportivo.ligar();
+      atualizarOutputEsportivo();
     }
+  }
 
-    function desligarCarroEsportivo() {
-        if(carroEsportivo) {
-            carroEsportivo.desligar();
-            atualizarOutputEsportivo();
-        }
+  function desligarCarroEsportivo() {
+    if (carroEsportivo) {
+      carroEsportivo.desligar();
+      atualizarOutputEsportivo();
     }
+  }
 
-    function acelerarCarroEsportivo() {
-        if(carroEsportivo) {
-            carroEsportivo.acelerar(10);
-            atualizarOutputEsportivo();
-        }
+  function acelerarCarroEsportivo() {
+    if (carroEsportivo) {
+      carroEsportivo.acelerar(10);
+      atualizarOutputEsportivo();
     }
+  }
 
-    function frearCarroEsportivo() {
-        if(carroEsportivo) {
-            carroEsportivo.frear(10);
-            atualizarOutputEsportivo();
-        }
+  function frearCarroEsportivo() {
+    if (carroEsportivo) {
+      carroEsportivo.frear(10);
+      atualizarOutputEsportivo();
     }
+  }
 
-    function ativarTurbo() {
-        if(carroEsportivo) {
-            carroEsportivo.ativarTurbo();
-            atualizarOutputEsportivo();
-        }
+  function ativarTurbo() {
+    if (carroEsportivo) {
+      carroEsportivo.ativarTurbo();
+      atualizarOutputEsportivo();
     }
+  }
 
-     function desativarTurbo() {
-        if(carroEsportivo) {
-            carroEsportivo.desativarTurbo();
-            atualizarOutputEsportivo();
-        }
+  function desativarTurbo() {
+    if (carroEsportivo) {
+      carroEsportivo.desativarTurbo();
+      atualizarOutputEsportivo();
     }
+  }
 
-    function criarCaminhao() {
-  const modelo = document.getElementById("modeloCaminhao").value;
-  const cor = document.getElementById("corCaminhao").value;
-  const capacidade = parseInt(document.getElementById("capacidadeCaminhao").value);
-  caminhao = new Caminhao(modelo, cor, capacidade);
-  atualizarOutputCaminhao();
-}
+  function criarCaminhao() {
+    const modelo = document.getElementById("modeloCaminhao").value;
+    const cor = document.getElementById("corCaminhao").value;
+    const capacidade = parseInt(document.getElementById("capacidadeCaminhao").value);
+    caminhao = new Caminhao(modelo, cor, capacidade);
+    atualizarOutputCaminhao();
+  }
 
-    function ligarCaminhao() {
-        if (caminhao) {
-            caminhao.ligar();
-            atualizarOutputCaminhao();
-        }
+  function ligarCaminhao() {
+    if (caminhao) {
+      caminhao.ligar();
+      atualizarOutputCaminhao();
     }
+  }
 
-    function desligarCaminhao() {
-        if (caminhao) {
-            caminhao.desligar();
-            atualizarOutputCaminhao();
-        }
+  function desligarCaminhao() {
+    if (caminhao) {
+      caminhao.desligar();
+      atualizarOutputCaminhao();
     }
+  }
 
-    function acelerarCaminhao() {
-        if (caminhao) {
-            caminhao.acelerar(10);
-            atualizarOutputCaminhao();
-        }
+  function acelerarCaminhao() {
+    if (caminhao) {
+      caminhao.acelerar(10);
+      atualizarOutputCaminhao();
     }
+  }
 
-    function frearCaminhao() {
-        if (caminhao) {
-            caminhao.frear(10);
-            atualizarOutputCaminhao();
-        }
+  function frearCaminhao() {
+    if (caminhao) {
+      caminhao.frear(10);
+      atualizarOutputCaminhao();
     }
+  }
 
-    function carregarCaminhao() {
-        if (caminhao) {
-            const carga = parseInt(document.getElementById("carga").value);
-            caminhao.carregar(carga);
-            atualizarOutputCaminhao();
-        }
+  function carregarCaminhao() {
+    if (caminhao) {
+      const carga = parseInt(document.getElementById("carga").value);
+      caminhao.carregar(carga);
+      atualizarOutputCaminhao();
     }
+  }
 
-    function descarregarCaminhao() {
-        if (caminhao) {
-            const carga = parseInt(document.getElementById("carga").value);
-            caminhao.descarregar(carga);
-            atualizarOutputCaminhao();
-        }
+  function descarregarCaminhao() {
+    if (caminhao) {
+      const carga = parseInt(document.getElementById("carga").value);
+      caminhao.descarregar(carga);
+      atualizarOutputCaminhao();
     }
+  }
 
-    function atualizarOutputEsportivo() {
-      const output = document.getElementById("outputEsportivo");
-      if (carroEsportivo) {
-        output.innerHTML = `
+  function atualizarOutputEsportivo() {
+    const output = document.getElementById("outputEsportivo");
+    if (carroEsportivo) {
+      output.innerHTML = `
           Modelo: ${carroEsportivo.modelo}<br>
           Cor: ${carroEsportivo.cor}<br>
           Ligado: ${carroEsportivo.ligado}<br>
           Velocidade: ${carroEsportivo.velocidade}<br>
           Turbo Ativado: ${carroEsportivo.turboAtivado}
         `;
-      } else {
-        output.innerHTML = "Crie um carro esportivo primeiro.";
-      }
+    } else {
+      output.innerHTML = "Crie um carro esportivo primeiro.";
     }
+  }
 
-    function atualizarOutputCaminhao() {
-      const output = document.getElementById("outputCaminhao");
-      if (caminhao) {
-        output.innerHTML = `
+  function atualizarOutputCaminhao() {
+    const output = document.getElementById("outputCaminhao");
+    if (caminhao) {
+      output.innerHTML = `
           Modelo: ${caminhao.modelo}<br>
           Cor: ${caminhao.cor}<br>
           Ligado: ${caminhao.ligado}<br>
@@ -239,8 +211,8 @@
           Capacidade de Carga: ${caminhao.capacidadeCarga} kg<br>
           Carga Atual: ${caminhao.cargaAtual} kg
         `;
-      } else {
-        output.innerHTML = "Crie um caminhão primeiro.";
-      }
+    } else {
+      output.innerHTML = "Crie um caminhão primeiro.";
     }
-  </script>
+  }
+</script> -->

@@ -1,227 +1,229 @@
-// --- INÍCIO DAS CORREÇÕES ---
+// --- Instâncias dos Veículos ---
+// Carro padrão criado automaticamente
+const meuCarro = new Carro("Sedan", "Vermelho");
 
-// 1. Criar a instância do carro PRIMEIRO
-const meuCarro = new Carro("Sedan", "Vermelho"); // Corrigido: Usa 'Carro' e vem antes
+// Variáveis para os outros veículos (serão criados pelos botões)
+let meuCarroEsportivo = null; // Inicializa como null
+let meuCaminhao = null;       // Inicializa como null
 
-// 2. Agora podemos usar 'meuCarro' com segurança
-// Exibição das informações iniciais do carro na página
-document.getElementById("modeloCarro").textContent = meuCarro.modelo;
-document.getElementById("corCarro").textContent = meuCarro.cor;
-document.getElementById("velocidadeCarro").textContent = meuCarro.velocidade; // Exibe velocidade inicial
+// Variável para guardar a referência do veículo atualmente selecionado
+let veiculoSelecionado = meuCarro; // Começa com o carro padrão selecionado
 
-// Funções para atualizar a velocidade na tela
-function atualizarVelocidadeNaTela() {
-    // Verifica se o elemento existe antes de tentar acessá-lo
-    const elVelocidade = document.getElementById("velocidadeCarro");
-    if (elVelocidade) {
-        elVelocidade.textContent = meuCarro.velocidade;
+// --- Elementos do DOM ---
+const divInformacoesVeiculo = document.getElementById("informacoesVeiculo");
+const outputCarro = document.getElementById("outputCarro"); // Para info específica se necessário
+const outputEsportivo = document.getElementById("outputEsportivo");
+const outputCaminhao = document.getElementById("outputCaminhao");
+const inputPesoInteracao = document.getElementById("pesoInteracao");
+
+// --- Funções de Criação ---
+function criarCarroEsportivo() {
+    const modelo = document.getElementById("modeloEsportivo").value || "Esportivo Padrão";
+    const cor = document.getElementById("corEsportivo").value || "Amarelo";
+    meuCarroEsportivo = new CarroEsportivo(modelo, cor);
+    console.log("Carro Esportivo criado:", meuCarroEsportivo);
+    outputEsportivo.textContent = `Carro Esportivo ${modelo} ${cor} criado. Selecione-o para interagir.`;
+    // Opcional: Selecionar automaticamente ao criar
+    selecionarVeiculo('esportivo');
+}
+
+function criarCaminhao() {
+    const modelo = document.getElementById("modeloCaminhao").value || "Caminhão Padrão";
+    const cor = document.getElementById("corCaminhao").value || "Branco";
+    const capacidade = parseInt(document.getElementById("capacidadeCaminhao").value) || 5000;
+    meuCaminhao = new Caminhao(modelo, cor, capacidade);
+    console.log("Caminhão criado:", meuCaminhao);
+    outputCaminhao.textContent = `Caminhão ${modelo} ${cor} (Cap: ${capacidade}kg) criado. Selecione-o para interagir.`;
+    // Opcional: Selecionar automaticamente ao criar
+    selecionarVeiculo('caminhao');
+}
+
+// --- Função para Atualizar a Exibição Central ---
+function atualizarExibicaoInformacoes() {
+    if (veiculoSelecionado) {
+        // Chama o método polimórfico exibirInformacoes()
+        divInformacoesVeiculo.innerHTML = veiculoSelecionado.exibirInformacoes().replace(/, /g, '<br>'); // Usa <br> para quebrar linha
+        // Atualizar também os outputs específicos (opcional, mas útil)
+        atualizarOutputsEspecificos();
     } else {
-        console.error("Elemento com id 'velocidadeCarro' não encontrado!");
+        divInformacoesVeiculo.textContent = "Nenhum veículo selecionado.";
+    }
+    // Atualiza a exibição da velocidade do carro padrão (se ele estiver selecionado)
+    // A velocidade dos outros será mostrada na div central
+     if (veiculoSelecionado === meuCarro) {
+         // O elemento velocidadeCarro não existe mais no HTML reestruturado
+         // A velocidade será mostrada na div central 'informacoesVeiculo'
+         // Se precisar de um display específico de velocidade, teria que recriar o elemento
+         console.log("Velocidade Carro Padrão:", meuCarro.velocidade);
+     }
+}
+
+// --- Função para Atualizar Outputs Específicos (se mantidos) ---
+function atualizarOutputsEspecificos() {
+    if (outputCarro && meuCarro) { // Atualiza o output do carro padrão se ele existe
+        // Poderia exibir algo específico aqui se quisesse, ou deixar como está
+         outputCarro.textContent = `Carro Padrão (Modelo: ${meuCarro.modelo}, Cor: ${meuCarro.cor}). Estado atual na área de controle.`;
+    }
+    if (outputEsportivo) {
+        outputEsportivo.textContent = meuCarroEsportivo
+            ? `Carro Esportivo ${meuCarroEsportivo.modelo} criado. Estado atual na área de controle.`
+            : "Carro Esportivo ainda não criado.";
+    }
+     if (outputCaminhao) {
+        outputCaminhao.textContent = meuCaminhao
+            ? `Caminhão ${meuCaminhao.modelo} (Cap: ${meuCaminhao.capacidadeCarga}kg) criado. Estado atual na área de controle.`
+            : "Caminhão ainda não criado.";
     }
 }
 
-// Adicionando eventos aos botões
-// Verifica se os botões existem antes de adicionar listeners
-const ligarBotao = document.getElementById("ligarBotao");
-if (ligarBotao) {
-    ligarBotao.addEventListener("click", function() {
-        meuCarro.ligar();
-        // Talvez atualizar informações gerais aqui também
-        exibirInformacoes('meuCarro');
-    });
+
+// --- Função de Seleção de Veículo ---
+function selecionarVeiculo(tipo) {
+    console.log("Tentando selecionar:", tipo);
+    switch (tipo) {
+        case 'carro':
+            veiculoSelecionado = meuCarro;
+            break;
+        case 'esportivo':
+            if (meuCarroEsportivo) {
+                veiculoSelecionado = meuCarroEsportivo;
+            } else {
+                alert("Crie o Carro Esportivo primeiro!");
+                return; // Não muda a seleção se não existe
+            }
+            break;
+        case 'caminhao':
+            if (meuCaminhao) {
+                veiculoSelecionado = meuCaminhao;
+            } else {
+                alert("Crie o Caminhão primeiro!");
+                return; // Não muda a seleção se não existe
+            }
+            break;
+        default:
+            console.error("Tipo de veículo desconhecido para seleção:", tipo);
+            return;
+    }
+    console.log("Veículo selecionado:", veiculoSelecionado);
+    atualizarExibicaoInformacoes(); // Atualiza a div central
 }
 
-const desligarBotao = document.getElementById("desligarBotao");
-if (desligarBotao) {
-    desligarBotao.addEventListener("click", function() {
-        meuCarro.desligar();
-         // Talvez atualizar informações gerais aqui também
-        exibirInformacoes('meuCarro');
-    });
-}
-
-const acelerarBotao = document.getElementById("acelerarBotao");
-if (acelerarBotao) {
-    acelerarBotao.addEventListener("click", function() {
-        meuCarro.acelerar();
-    });
-}
-
-// --- FIM DAS CORREÇÕES ---
-
-
-// Variáveis para outros veículos (ainda não usados diretamente pelos botões)
-let carroEsportivo;
-let caminhao;
-
-// Função para exibir informações (já estava ok, mas depende da criação correta de meuCarro)
-function exibirInformacoes(tipoVeiculo) {
-    let veiculo;
-
-    if (tipoVeiculo === 'meuCarro') {
-        veiculo = meuCarro;
-    } else if (tipoVeiculo === 'carroEsportivo' && carroEsportivo) {
-        veiculo = carroEsportivo;
-    } else if (tipoVeiculo === 'caminhao' && caminhao) {
-        veiculo = caminhao;
-    } else {
-        // Verifica se o elemento existe
-        const elInfo = document.getElementById("informacoesVeiculo");
-        if(elInfo) {
-             elInfo.textContent = "Veículo não criado ou não selecionado.";
-        } else {
-            console.error("Elemento com id 'informacoesVeiculo' não encontrado!");
-        }
+// --- A GARAGEM INTELIGENTE: Função interagir() ---
+function interagir(veiculo, acao) {
+    if (!veiculo) {
+        alert("Nenhum veículo selecionado para interagir!");
+        console.warn("Tentativa de interação sem veículo selecionado.");
         return;
     }
 
-    
+    console.log(`Interagindo com ${veiculo.constructor.name} (${veiculo.modelo}) - Ação: ${acao}`);
+
+    try { // Usar try...catch para lidar com métodos que podem não existir
+        switch (acao) {
+            case 'ligar':
+                veiculo.ligar();
+                break;
+            case 'desligar':
+                veiculo.desligar();
+                break;
+            case 'acelerar':
+                // O método acelerar da classe base não espera argumento no seu código original
+                // Se quiser passar um valor, teria que ajustar a classe Carro
+                 if (veiculo.ligado) { // Verifica se está ligado antes de acelerar
+                     veiculo.acelerar(); // Chama sem argumento como definido em Carro.js
+                 } else {
+                     console.log("Veículo desligado, não pode acelerar.");
+                     alert("Ligue o veículo primeiro!");
+                 }
+                break;
+            case 'frear':
+                 // O método frear da classe base pode receber argumento
+                 if (veiculo.ligado) {
+                    veiculo.frear(5); // Freia com um valor padrão
+                 } else {
+                     console.log("Veículo desligado.");
+                     // Poderia permitir frear mesmo desligado se fizesse sentido (freio de mão?)
+                 }
+                break;
+            case 'ativarTurbo':
+                if (typeof veiculo.ativarTurbo === 'function') {
+                    veiculo.ativarTurbo();
+                } else {
+                    alert(`Ação '${acao}' não disponível para ${veiculo.constructor.name}.`);
+                    console.warn(`Método '${acao}' não encontrado em ${veiculo.constructor.name}`);
+                }
+                break;
+             case 'desativarTurbo':
+                 if (typeof veiculo.desativarTurbo === 'function') {
+                    veiculo.desativarTurbo();
+                } else {
+                    alert(`Ação '${acao}' não disponível para ${veiculo.constructor.name}.`);
+                    console.warn(`Método '${acao}' não encontrado em ${veiculo.constructor.name}`);
+                }
+                break;
+            case 'carregar':
+                if (typeof veiculo.carregar === 'function') {
+                    const peso = parseInt(inputPesoInteracao.value);
+                    if (!isNaN(peso) && peso > 0) {
+                        veiculo.carregar(peso);
+                    } else {
+                        alert("Por favor, insira um peso válido para carregar.");
+                    }
+                } else {
+                    alert(`Ação '${acao}' não disponível para ${veiculo.constructor.name}.`);
+                    console.warn(`Método '${acao}' não encontrado em ${veiculo.constructor.name}`);
+                }
+                break;
+            case 'descarregar':
+                 if (typeof veiculo.descarregar === 'function') {
+                    const peso = parseInt(inputPesoInteracao.value);
+                     if (!isNaN(peso) && peso > 0) {
+                        veiculo.descarregar(peso);
+                    } else {
+                        alert("Por favor, insira um peso válido para descarregar.");
+                    }
+                } else {
+                    alert(`Ação '${acao}' não disponível para ${veiculo.constructor.name}.`);
+                    console.warn(`Método '${acao}' não encontrado em ${veiculo.constructor.name}`);
+                }
+                break;
+            // Adicione mais 'case' para outras ações (buzinar, etc.)
+            default:
+                alert(`Ação desconhecida: ${acao}`);
+                console.warn(`Ação desconhecida tentada: ${acao}`);
+        }
+    } catch (error) {
+        console.error(`Erro ao executar a ação '${acao}' em ${veiculo.constructor.name}:`, error);
+        alert(`Ocorreu um erro ao tentar '${acao}'. Verifique o console.`);
+    }
+
+
+    // IMPORTANTE: Atualizar a exibição das informações após cada interação
+    atualizarExibicaoInformacoes();
 }
 
-// Opcional: Exibir informações iniciais ao carregar a página
-// Garante que o DOM esteja carregado antes de tentar exibir
-// window.addEventListener('DOMContentLoaded', (event) => {
-//     exibirInformacoes('meuCarro');
-// });
-// Ou chame diretamente se o script estiver no final do <body>
-exibirInformacoes('meuCarro');
+// --- Função Helper para Chamar Interagir ---
+// Usada pelos botões genéricos no HTML
+function chamarInteragir(acao) {
+    interagir(veiculoSelecionado, acao);
+}
 
+// --- Event Listeners para Botões de Seleção ---
+document.getElementById("selectCarroBtn").addEventListener("click", () => selecionarVeiculo('carro'));
+document.getElementById("selectEsportivoBtn").addEventListener("click", () => selecionarVeiculo('esportivo'));
+document.getElementById("selectCaminhaoBtn").addEventListener("click", () => selecionarVeiculo('caminhao'));
 
+// --- Inicialização ---
+// Garante que o DOM está carregado (embora o script no fim do body geralmente resolva)
+window.addEventListener('DOMContentLoaded', (event) => {
+    console.log('DOM carregado. Inicializando exibição.');
+    atualizarExibicaoInformacoes(); // Exibe as informações do veículo selecionado inicialmente
+    atualizarOutputsEspecificos(); // Atualiza outputs específicos iniciais
+});
 
-  // Inclua o código JavaScript (Carro, CarroEsportivo, Caminhao) aqui
-
-  // let carroEsportivo;
-  // let caminhao;
-
-
-  function criarCarroEsportivo() {
-    const modelo = document.getElementById("modeloEsportivo").value;
-    const cor = document.getElementById("corEsportivo").value;
-    carroEsportivo = new CarroEsportivo(modelo, cor);
-    atualizarOutputEsportivo();
-  }
-
-  function ligarCarroEsportivo() {
-    if (carroEsportivo) {
-      carroEsportivo.ligar();
-      atualizarOutputEsportivo();
-    }
-  }
-
-  function desligarCarroEsportivo() {
-    if (carroEsportivo) {
-      carroEsportivo.desligar();
-      atualizarOutputEsportivo();
-    }
-  }
-
-  function acelerarCarroEsportivo() {
-    if (carroEsportivo) {
-      carroEsportivo.acelerar(10);
-      atualizarOutputEsportivo();
-    }
-  }
-
-  function frearCarroEsportivo() {
-    if (carroEsportivo) {
-      carroEsportivo.frear(10);
-      atualizarOutputEsportivo();
-    }
-  }
-
-  function ativarTurbo() {
-    if (carroEsportivo) {
-      carroEsportivo.ativarTurbo();
-      atualizarOutputEsportivo();
-    }
-  }
-
-  function desativarTurbo() {
-    if (carroEsportivo) {
-      carroEsportivo.desativarTurbo();
-      atualizarOutputEsportivo();
-    }
-  }
-
-  function criarCaminhao() {
-    const modelo = document.getElementById("modeloCaminhao").value;
-    const cor = document.getElementById("corCaminhao").value;
-    const capacidade = parseInt(document.getElementById("capacidadeCaminhao").value);
-    caminhao = new Caminhao(modelo, cor, capacidade);
-    atualizarOutputCaminhao();
-  }
-
-  function ligarCaminhao() {
-    if (caminhao) {
-      caminhao.ligar();
-      atualizarOutputCaminhao();
-    }
-  }
-
-  function desligarCaminhao() {
-    if (caminhao) {
-      caminhao.desligar();
-      atualizarOutputCaminhao();
-    }
-  }
-
-  function acelerarCaminhao() {
-    if (caminhao) {
-      caminhao.acelerar(10);
-      atualizarOutputCaminhao();
-    }
-  }
-
-  function frearCaminhao() {
-    if (caminhao) {
-      caminhao.frear(10);
-      atualizarOutputCaminhao();
-    }
-  }
-
-  function carregarCaminhao() {
-    if (caminhao) {
-      const carga = parseInt(document.getElementById("carga").value);
-      caminhao.carregar(carga);
-      atualizarOutputCaminhao();
-    }
-  }
-
-  function descarregarCaminhao() {
-    if (caminhao) {
-      const carga = parseInt(document.getElementById("carga").value);
-      caminhao.descarregar(carga);
-      atualizarOutputCaminhao();
-    }
-  }
-
-  function atualizarOutputEsportivo() {
-    const output = document.getElementById("outputEsportivo");
-    if (carroEsportivo) {
-      output.innerHTML = `
-          Modelo: ${carroEsportivo.modelo}<br>
-          Cor: ${carroEsportivo.cor}<br>
-          Ligado: ${carroEsportivo.ligado}<br>
-          Velocidade: ${carroEsportivo.velocidade}<br>
-          Turbo Ativado: ${carroEsportivo.turboAtivado}
-        `;
-    } else {
-      output.innerHTML = "Crie um carro esportivo primeiro.";
-    }
-  }
-
-  function atualizarOutputCaminhao() {
-    const output = document.getElementById("outputCaminhao");
-    if (caminhao) {
-      output.innerHTML = `
-          Modelo: ${caminhao.modelo}<br>
-          Cor: ${caminhao.cor}<br>
-          Ligado: ${caminhao.ligado}<br>
-          Velocidade: ${caminhao.velocidade}<br>
-          Capacidade de Carga: ${caminhao.capacidadeCarga} kg<br>
-          Carga Atual: ${caminhao.cargaAtual} kg
-        `;
-    } else {
-      output.innerHTML = "Crie um caminhão primeiro.";
-    }
-  }
+// --- REMOVIDO (era do código antigo, não mais necessário com a abordagem interagir) ---
+/*
+function atualizarVelocidadeNaTela() { ... } // A velocidade agora é parte de exibirInformacoes()
+// Funções específicas como ligarCarroEsportivo(), acelerarCaminhao() etc. foram substituídas por chamarInteragir()
+// AddEventListeners específicos para botões como ligarBotao, desligarBotao, acelerarBotao do carro padrão foram removidos em favor dos genéricos
+*/

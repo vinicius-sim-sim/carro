@@ -1,23 +1,133 @@
-#carroImagem {
-    width: 200px;
-    float: left;
-    margin-right: 20px;
+/* style.css */
+
+/* Estilos Globais */
+
+body {
+    font-family: Arial, sans-serif; /* Define a fonte padrão para o corpo da página */
+    margin: 15px; /* Define margens ao redor do corpo da página */
+    background-color: #f4f4f4; /* Define a cor de fundo da página */
 }
 
-#mensagens {
-    width: 200px;
-    height: 150px;
-    border: 1px solid #ccc;
-    padding: 5px;
-    overflow-y: auto;
+h1, h2, h3 {
+    color: #333; /* Define a cor dos títulos */
+    text-align: center; /* Centraliza o texto dos títulos */
 }
 
-#infoCarro {
-    margin-top: 10px;
-    clear: both;
+/* Estilos da Seção de Controle da Garagem */
+
+.garagem-controle {
+    background-color: #e0e0e0; /* Define a cor de fundo da seção de controle */
+    padding: 20px; /* Define o preenchimento interno da seção de controle */
+    margin-bottom: 20px; /* Define a margem inferior da seção de controle */
+    border-radius: 8px; /* Define bordas arredondadas para a seção de controle */
+    border: 1px solid #ccc; /* Define uma borda para a seção de controle */
 }
+
+.garagem-controle h2 {
+    margin-top: 0; /* Remove a margem superior padrão do título h2 dentro da seção de controle */
+}
+
+.garagem-controle button {
+     margin: 5px 3px; /* Define as margens dos botões dentro da seção de controle */
+}
+
+/* Estilos da Área de Informações Central */
+
+.info-central {
+    background-color: #fff; /* Define a cor de fundo da área de informações central */
+    border: 1px solid #ddd; /* Define uma borda para a área de informações central */
+    padding: 15px; /* Define o preenchimento interno da área de informações central */
+    margin-top: 10px; /* Define a margem superior da área de informações central */
+    min-height: 80px; /* Define uma altura mínima para a área de informações central */
+    border-radius: 5px; /* Define bordas arredondadas para a área de informações central */
+    font-family: 'Courier New', Courier, monospace; /* Define uma fonte monoespaçada para a área de informações central */
+    line-height: 1.6; /* Define a altura da linha para o texto dentro da área de informações central */
+}
+
+/* Estilos dos Contêineres de Veículos */
+
+.container {
+    background-color: #fff; /* Define a cor de fundo dos contêineres */
+    padding: 15px; /* Define o preenchimento interno dos contêineres */
+    margin-bottom: 15px; /* Define a margem inferior dos contêineres */
+    border: 1px solid #ddd; /* Define uma borda para os contêineres */
+    border-radius: 8px; /* Define bordas arredondadas para os contêineres */
+    text-align: center; /* Centraliza o conteúdo dentro dos contêineres */
+}
+
+.veiculo-container h2 {
+    margin-top: 0; /* Remove a margem superior padrão do título h2 dentro dos contêineres de veículos */
+    color: #555; /* Define a cor do título h2 dentro dos contêineres de veículos */
+}
+
+/* Estilos das Imagens dos Veículos */
+
+.veiculo-img {
+    max-width: 150px; /* Limita a largura máxima das imagens dos veículos */
+    height: auto; /* Ajusta a altura automaticamente para manter a proporção */
+    display: block; /* Permite usar margin: auto para centralizar */
+    margin: 10px auto; /* Centraliza a imagem horizontalmente */
+    border-radius: 5px; /* Define bordas arredondadas para as imagens */
+}
+
+/* Estilos dos Rótulos (Labels) */
+
+label {
+    display: inline-block; /* Permite definir largura e margem mantendo o elemento na linha */
+    margin-right: 5px; /* Define uma margem à direita dos rótulos */
+    margin-top: 5px; /* Define uma margem superior dos rótulos */
+    min-width: 100px; /* Define uma largura mínima para alinhar os rótulos */
+    text-align: right; /* Alinha o texto dos rótulos à direita */
+}
+
+/* Estilos dos Campos de Entrada (Text e Number) */
+
+input[type="text"], input[type="number"] {
+    padding: 5px; /* Define o preenchimento interno dos campos de entrada */
+    margin-bottom: 10px; /* Define a margem inferior dos campos de entrada */
+    border: 1px solid #ccc; /* Define uma borda para os campos de entrada */
+    border-radius: 4px; /* Define bordas arredondadas para os campos de entrada */
+}
+
+/* Estilos dos Botões */
 
 button {
-    padding: 5px 10px;
-    margin-right: 5px;
+    padding: 8px 15px; /* Define o preenchimento interno dos botões */
+    margin: 5px; /* Define as margens dos botões */
+    cursor: pointer; /* Define o cursor do mouse como uma mãozinha ao passar por cima */
+    background-color: #007bff; /* Define a cor de fundo padrão dos botões */
+    color: white; /* Define a cor do texto dos botões */
+    border: none; /* Remove a borda padrão dos botões */
+    border-radius: 4px; /* Define bordas arredondadas para os botões */
+    transition: background-color 0.2s ease; /* Adiciona uma transição suave na mudança da cor de fundo */
+}
+
+button:hover {
+    background-color: #0056b3; /* Define a cor de fundo quando o mouse passa por cima */
+}
+
+button:active {
+     background-color: #004085; /* Define a cor de fundo quando o botão é clicado */
+}
+
+/* Estilos da Área de Saída (Output) */
+
+.output {
+    margin-top: 10px; /* Define a margem superior da área de saída */
+    padding: 10px; /* Define o preenchimento interno da área de saída */
+    background-color: #f9f9f9; /* Define a cor de fundo da área de saída */
+    border: 1px dashed #ccc; /* Define uma borda tracejada para a área de saída */
+    border-radius: 4px; /* Define bordas arredondadas para a área de saída */
+    min-height: 40px; /* Define uma altura mínima para a área de saída */
+    text-align: left; /* Alinha o texto da área de saída à esquerda */
+    font-size: 0.9em; /* Define o tamanho da fonte da área de saída */
+}
+
+/* Estilos da Linha Horizontal */
+
+hr {
+    border: 0; /* Remove a borda padrão da linha horizontal */
+    height: 1px; /* Define a altura da linha horizontal */
+    background-color: #ccc; /* Define a cor da linha horizontal */
+    margin: 25px 0; /* Define as margens superior e inferior da linha horizontal */
 }

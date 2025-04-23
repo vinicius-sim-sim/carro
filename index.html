@@ -1,218 +1,97 @@
+<!DOCTYPE html>
 <html>
 
 <head>
-  <title>Carro Interativo</title>
-  <link rel="stylesheet" href="style.css">
+    <title>A Corrida da Herança - Garagem Inteligente</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
-  <h1>Meu Carro</h1>
-  <img src="Imagens/carro.jpg" alt="#">
-  <audio controls>
-    <source
-      src="Audio/O V12 mais afinado que você vai ouvir. Aventador com Secret Weapon. (online-audio-converter.com).wav"
-      Type="Ligar">
-  </audio>
-  <p>Modelo: <span id="modeloCarro"></span></p>
-  <p>Cor: <span id="corCarro"></span></p>
-  <p>Velocidade: <span id="velocidadeCarro">0</span> km/h</p>
+    <h1>Garagem Inteligente</h1>
 
-  <button id="ligarBotao">Ligar</button>
-  <button id="desligarBotao">Desligar</button>
-  <button id="acelerarBotao">Acelerar</button>
+    <!-- Seção de Seleção e Exibição Central -->
+    <div class="garagem-controle">
+        <h2>Controle da Garagem</h2>
+        <p>Selecione um veículo para interagir:</p>
+        <button id="selectCarroBtn">Selecionar Carro Padrão</button>
+        <button id="selectEsportivoBtn">Selecionar Carro Esportivo</button>
+        <button id="selectCaminhaoBtn">Selecionar Caminhão</button>
 
-  <script src="carro.js"></script>
-  <script src="esportivo.js"></script>
-  <script src="caminhao.js"></script>
-  <script src="script.js"></script>
+        <h3>Veículo Selecionado:</h3>
+        <div id="informacoesVeiculo" class="output info-central">
+            Nenhum veículo selecionado. Crie e selecione um veículo.
+        </div>
+
+        <h3>Ações Genéricas:</h3>
+        <button onclick="chamarInteragir('ligar')">Ligar</button>
+        <button onclick="chamarInteragir('desligar')">Desligar</button>
+        <button onclick="chamarInteragir('acelerar')">Acelerar</button>
+        <button onclick="chamarInteragir('frear')">Frear</button>
+        <button onclick="chamarInteragir('ativarTurbo')">Ativar Turbo</button>
+        <button onclick="chamarInteragir('desativarTurbo')">Desativar Turbo</button>
+        <!-- Input para carga/descarga -->
+        <label for="pesoInteracao">Peso (kg):</label>
+        <input type="number" id="pesoInteracao" value="100" style="width: 60px;">
+        <button onclick="chamarInteragir('carregar')">Carregar</button>
+        <button onclick="chamarInteragir('descarregar')">Descarregar</button>
+        <!-- Adicione mais botões para outras ações se necessário (ex: buzinar) -->
+
+    </div>
+
+    <hr>
+
+    <!-- Seção Carro Padrão (Simplificada) -->
+    <div class="container veiculo-container">
+        <h2>Carro Padrão</h2>
+        <img src="Imagens/carro.jpg" alt="Carro Padrão" class="veiculo-img">
+        <!-- Info será exibida na área central -->
+        <div id="outputCarro" class="output">
+            <!-- Informações específicas do Carro Padrão podem ser exibidas aqui se necessário -->
+            Carro Padrão (Modelo: Volkswagen Gol gti, Cor: Branco) criado. Use os controles da garagem.
+        </div>
+         <!-- Botões de ação específicos removidos em favor dos genéricos -->
+    </div>
+
+     <hr>
+
+    <!-- Seção Carro Esportivo -->
+    <div class="container veiculo-container">
+        <h2>Carro Esportivo</h2>
+        <img src="Imagens/esportivo.png" alt="Carro Esportivo" class="veiculo-img"> <!-- Adicione uma imagem se tiver -->
+        <label for="modeloEsportivo">Modelo:</label>
+        <input type="text" id="modeloEsportivo" value="Corolla"><br>
+        <label for="corEsportivo">Cor:</label>
+        <input type="text" id="corEsportivo" value="Preto"><br>
+        <button onclick="criarCarroEsportivo()">Criar/Recriar Carro Esportivo</button><br>
+        <div id="outputEsportivo" class="output">Carro Esportivo ainda não criado.</div>
+         <!-- Botões de ação específicos removidos em favor dos genéricos -->
+    </div>
+
+    <hr>
+
+    <!-- Seção Caminhão -->
+    <div class="container veiculo-container">
+        <h2>Caminhão</h2>
+         <img src="Imagens/caminhao.webp" alt="Caminhão" class="veiculo-img"> <!-- Adicione uma imagem se tiver -->
+        <label for="modeloCaminhao">Modelo:</label>
+        <input type="text" id="modeloCaminhao" value="Volvo FH"><br>
+        <label for="corCaminhao">Cor:</label>
+        <input type="text" id="corCaminhao" value="Vermelho"><br>
+        <label for="capacidadeCaminhao">Capacidade (kg):</label>
+        <input type="number" id="capacidadeCaminhao" value="10000"><br>
+        <button onclick="criarCaminhao()">Criar/Recriar Caminhão</button><br>
+        <div id="outputCaminhao" class="output">Caminhão ainda não criado.</div>
+         <!-- Botões de ação específicos (exceto criar) removidos em favor dos genéricos -->
+         <!-- Input de carga movido para a área de interação geral -->
+    </div>
 
 
-  <div class="container">
-    <h2>Carro Esportivo</h2>
-    <label for="modeloEsportivo">Modelo:</label>
-    <input type="text" id="modeloEsportivo" value="Ferrari"><br><br>
-    <label for="corEsportivo">Cor:</label>
-    <input type="text" id="corEsportivo" value="Vermelha"><br><br>
-    <button onclick="criarCarroEsportivo()">Criar Carro Esportivo</button><br><br>
-    <button onclick="ligarCarroEsportivo()">Ligar</button>
-    <button onclick="desligarCarroEsportivo()">Desligar</button>
-    <button onclick="acelerarCarroEsportivo()">Acelerar</button>
-    <button onclick="frearCarroEsportivo()">Frear</button>
-    <button onclick="ativarTurbo()">Ativar Turbo</button>
-    <button onclick="desativarTurbo()">Desativar Turbo</button>
-    <div id="outputEsportivo" class="output"></div>
-  </div>
-
-  <div class="container">
-    <h2>Caminhão</h2>
-    <label for="modeloCaminhao">Modelo:</label>
-    <input type="text" id="modeloCaminhao" value="Volvo"><br><br>
-    <label for="corCaminhao">Cor:</label>
-    <input type="text" id="corCaminhao" value="Azul"><br><br>
-    <label for="capacidadeCaminhao">Capacidade (kg):</label>
-    <input type="number" id="capacidadeCaminhao" value="10000"><br><br>
-    <button onclick="criarCaminhao()">Criar Caminhão</button><br><br>
-    <button onclick="ligarCaminhao()">Ligar</button>
-    <button onclick="desligarCaminhao()">Desligar</button>
-    <button onclick="acelerarCaminhao()">Acelerar</button>
-    <button onclick="frearCaminhao()">Frear</button>
-    <label for="carga">Carga (kg):</label>
-    <input type="number" id="carga" value="1000">
-    <button onclick="carregarCaminhao()">Carregar</button>
-    <button onclick="descarregarCaminhao()">Descarregar</button>
-    <div id="outputCaminhao" class="output"></div>
-  </div>
-
-  <div id="informacoesVeiculo"></div>
-
-  <button onclick="exibirInformacoes('meuCarro')">Exibir Informações do Carro</button>
-  <button onclick="exibirInformacoes('carroEsportivo')">Exibir Informações do Carro Esportivo</button>
-  <button onclick="exibirInformacoes('caminhao')">Exibir Informações do Caminhão</button>
+    <!-- Scripts no final -->
+    <script src="carro.js"></script>
+    <script src="esportivo.js"></script>
+    <script src="caminhao.js"></script>
+    <script src="script.js"></script>
 
 </body>
 
 </html>
-
-<!-- <script src="carro.js"></script>
-<script src="esportivo.js"></script>
-<script src="caminhao.js"></script> -->
-
-<!-- <script>
-  // Inclua o código JavaScript (Carro, CarroEsportivo, Caminhao) aqui
-
-  let carroEsportivo;
-  let caminhao;
-
-
-  function criarCarroEsportivo() {
-    const modelo = document.getElementById("modeloEsportivo").value;
-    const cor = document.getElementById("corEsportivo").value;
-    carroEsportivo = new CarroEsportivo(modelo, cor);
-    atualizarOutputEsportivo();
-  }
-
-  function ligarCarroEsportivo() {
-    if (carroEsportivo) {
-      carroEsportivo.ligar();
-      atualizarOutputEsportivo();
-    }
-  }
-
-  function desligarCarroEsportivo() {
-    if (carroEsportivo) {
-      carroEsportivo.desligar();
-      atualizarOutputEsportivo();
-    }
-  }
-
-  function acelerarCarroEsportivo() {
-    if (carroEsportivo) {
-      carroEsportivo.acelerar(10);
-      atualizarOutputEsportivo();
-    }
-  }
-
-  function frearCarroEsportivo() {
-    if (carroEsportivo) {
-      carroEsportivo.frear(10);
-      atualizarOutputEsportivo();
-    }
-  }
-
-  function ativarTurbo() {
-    if (carroEsportivo) {
-      carroEsportivo.ativarTurbo();
-      atualizarOutputEsportivo();
-    }
-  }
-
-  function desativarTurbo() {
-    if (carroEsportivo) {
-      carroEsportivo.desativarTurbo();
-      atualizarOutputEsportivo();
-    }
-  }
-
-  function criarCaminhao() {
-    const modelo = document.getElementById("modeloCaminhao").value;
-    const cor = document.getElementById("corCaminhao").value;
-    const capacidade = parseInt(document.getElementById("capacidadeCaminhao").value);
-    caminhao = new Caminhao(modelo, cor, capacidade);
-    atualizarOutputCaminhao();
-  }
-
-  function ligarCaminhao() {
-    if (caminhao) {
-      caminhao.ligar();
-      atualizarOutputCaminhao();
-    }
-  }
-
-  function desligarCaminhao() {
-    if (caminhao) {
-      caminhao.desligar();
-      atualizarOutputCaminhao();
-    }
-  }
-
-  function acelerarCaminhao() {
-    if (caminhao) {
-      caminhao.acelerar(10);
-      atualizarOutputCaminhao();
-    }
-  }
-
-  function frearCaminhao() {
-    if (caminhao) {
-      caminhao.frear(10);
-      atualizarOutputCaminhao();
-    }
-  }
-
-  function carregarCaminhao() {
-    if (caminhao) {
-      const carga = parseInt(document.getElementById("carga").value);
-      caminhao.carregar(carga);
-      atualizarOutputCaminhao();
-    }
-  }
-
-  function descarregarCaminhao() {
-    if (caminhao) {
-      const carga = parseInt(document.getElementById("carga").value);
-      caminhao.descarregar(carga);
-      atualizarOutputCaminhao();
-    }
-  }
-
-  function atualizarOutputEsportivo() {
-    const output = document.getElementById("outputEsportivo");
-    if (carroEsportivo) {
-      output.innerHTML = `
-          Modelo: ${carroEsportivo.modelo}<br>
-          Cor: ${carroEsportivo.cor}<br>
-          Ligado: ${carroEsportivo.ligado}<br>
-          Velocidade: ${carroEsportivo.velocidade}<br>
-          Turbo Ativado: ${carroEsportivo.turboAtivado}
-        `;
-    } else {
-      output.innerHTML = "Crie um carro esportivo primeiro.";
-    }
-  }
-
-  function atualizarOutputCaminhao() {
-    const output = document.getElementById("outputCaminhao");
-    if (caminhao) {
-      output.innerHTML = `
-          Modelo: ${caminhao.modelo}<br>
-          Cor: ${caminhao.cor}<br>
-          Ligado: ${caminhao.ligado}<br>
-          Velocidade: ${caminhao.velocidade}<br>
-          Capacidade de Carga: ${caminhao.capacidadeCarga} kg<br>
-          Carga Atual: ${caminhao.cargaAtual} kg
-        `;
-    } else {
-      output.innerHTML = "Crie um caminhão primeiro.";
-    }
-  }
-</script> -->

@@ -1,0 +1,35 @@
+[
+    {
+      "id": "carro-padrao-01",
+      "modeloReferencia": "Sedan Genérico",
+      "valorFIPE": "R$ 45.000,00",
+      "recallPendente": false,
+      "ultimaRevisao": "2023-10-15",
+      "dicaManutencao": "Verificar nível do óleo a cada 5.000 km."
+    },
+    {
+      "id": "esportivo-corolla-01",
+      "modeloReferencia": "Toyota Corolla",
+      "valorFIPE": "R$ 148.000,00",
+      "recallPendente": true,
+      "recallDescricao": "Verificação do sistema de airbags.",
+      "ultimaRevisao": "2024-01-20",
+      "dicaManutencao": "Usar gasolina de alta octanagem para melhor performance do turbo."
+    },
+    {
+      "id": "caminhao-volvo-01",
+      "modeloReferencia": "Volvo FH",
+      "valorFIPE": "R$ 650.000,00",
+      "recallPendente": false,
+      "ultimaRevisao": "2023-12-01",
+      "dicaManutencao": "Inspecionar pneus e freios antes de viagens longas devido à carga."
+    },
+    {
+      "id": "veiculo-fantasma-99",
+      "modeloReferencia": "DeLorean DMC-12",
+      "valorFIPE": "Inestimável",
+      "recallPendente": false,
+      "ultimaRevisao": "1985-10-26",
+      "dicaManutencao": "Cuidado com o capacitor de fluxo ao atingir 88 mph."
+    }
+  ]

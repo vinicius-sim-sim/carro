@@ -1,10 +1,11 @@
 // --- Instâncias dos Veículos ---
 // Carro padrão criado automaticamente
-const meuCarro = new Carro("Sedan", "Vermelho");
+const meuCarro = new Carro("Sedan", "Vermelho", "carro-padrao-01");
 
 // Variáveis para os outros veículos (serão criados pelos botões)
 let meuCarroEsportivo = null; // Inicializa como null
 let meuCaminhao = null;       // Inicializa como null
+
 
 // Variável para guardar a referência do veículo atualmente selecionado
 let veiculoSelecionado = meuCarro; // Começa com o carro padrão selecionado
@@ -20,10 +21,10 @@ const inputPesoInteracao = document.getElementById("pesoInteracao");
 function criarCarroEsportivo() {
     const modelo = document.getElementById("modeloEsportivo").value || "Esportivo Padrão";
     const cor = document.getElementById("corEsportivo").value || "Amarelo";
-    meuCarroEsportivo = new CarroEsportivo(modelo, cor);
+    // Use um ID que corresponda ao seu JSON
+    meuCarroEsportivo = new CarroEsportivo(modelo, cor, "esportivo-corolla-01"); // Adiciona o ID da API
     console.log("Carro Esportivo criado:", meuCarroEsportivo);
     outputEsportivo.textContent = `Carro Esportivo ${modelo} ${cor} criado. Selecione-o para interagir.`;
-    // Opcional: Selecionar automaticamente ao criar
     selecionarVeiculo('esportivo');
 }
 
@@ -31,10 +32,10 @@ function criarCaminhao() {
     const modelo = document.getElementById("modeloCaminhao").value || "Caminhão Padrão";
     const cor = document.getElementById("corCaminhao").value || "Branco";
     const capacidade = parseInt(document.getElementById("capacidadeCaminhao").value) || 5000;
-    meuCaminhao = new Caminhao(modelo, cor, capacidade);
+     // Use um ID que corresponda ao seu JSON
+    meuCaminhao = new Caminhao(modelo, cor, capacidade, "caminhao-volvo-01"); // Adiciona o ID da API
     console.log("Caminhão criado:", meuCaminhao);
     outputCaminhao.textContent = `Caminhão ${modelo} ${cor} (Cap: ${capacidade}kg) criado. Selecione-o para interagir.`;
-    // Opcional: Selecionar automaticamente ao criar
     selecionarVeiculo('caminhao');
 }
 
@@ -227,3 +228,92 @@ function atualizarVelocidadeNaTela() { ... } // A velocidade agora é parte de e
 // Funções específicas como ligarCarroEsportivo(), acelerarCaminhao() etc. foram substituídas por chamarInteragir()
 // AddEventListeners específicos para botões como ligarBotao, desligarBotao, acelerarBotao do carro padrão foram removidos em favor dos genéricos
 */
+
+// --- Funções da API Simulada ---
+
+/**
+ * Busca detalhes adicionais de um veículo na API simulada (arquivo JSON local).
+ * @param {string} identificadorVeiculo O ID único do veículo a ser buscado.
+ * @returns {Promise<object|null>} Uma Promise que resolve com o objeto do veículo encontrado
+ *                                  ou null se não encontrado ou em caso de erro.
+ */
+async function buscarDetalhesVeiculoAPI(identificadorVeiculo) {
+    console.log(`Buscando detalhes para o ID: ${identificadorVeiculo}`);
+    try {
+      const response = await fetch('./dados_veiculos_api.json'); // Busca o arquivo local
+  
+      if (!response.ok) {
+        // Se o status da resposta não for OK (ex: 404 Not Found)
+        console.error(`Erro ao buscar API: ${response.status} ${response.statusText}`);
+        // Lança um erro para ser pego pelo catch, ou retorna null diretamente
+        // throw new Error(`HTTP error! status: ${response.status}`); // Opção 1: Lançar erro
+        return null; // Opção 2: Retornar null em caso de erro de fetch
+      }
+  
+      const todosVeiculosAPI = await response.json(); // Converte a resposta para JSON
+  
+      // Encontra o veículo pelo ID fornecido
+      const veiculoEncontrado = todosVeiculosAPI.find(veiculo => veiculo.id === identificadorVeiculo);
+  
+      if (veiculoEncontrado) {
+        console.log("Veículo encontrado na API:", veiculoEncontrado);
+        return veiculoEncontrado; // Retorna o objeto do veículo se encontrado
+      } else {
+        console.log(`Veículo com ID ${identificadorVeiculo} não encontrado na API.`);
+        return null; // Retorna null se o veículo não for encontrado no array
+      }
+  
+    } catch (error) {
+      // Captura erros de rede, de parse do JSON, ou o erro lançado manualmente
+      console.error("Falha ao buscar ou processar dados da API:", error);
+      return null; // Retorna null em caso de qualquer erro
+    }
+  }
+  // --- Elementos do DOM (adicione os novos) ---
+// ... (elementos existentes)
+const btnBuscarDetalhes = document.getElementById("buscarDetalhesBtn");
+const divDetalhesExtrasOutput = document.getElementById("detalhesExtrasOutput");
+
+// --- Event Listener para o Botão de Detalhes Extras ---
+btnBuscarDetalhes.addEventListener('click', async () => { // Usando async para await
+  if (!veiculoSelecionado) {
+    divDetalhesExtrasOutput.innerHTML = "Selecione um veículo primeiro.";
+    return;
+  }
+
+  if (!veiculoSelecionado.apiId) {
+     divDetalhesExtrasOutput.innerHTML = "Este veículo não possui um ID para consulta na API.";
+     console.warn("Veículo selecionado não tem apiId:", veiculoSelecionado);
+     return;
+  }
+
+  // Exibe mensagem de carregamento
+  divDetalhesExtrasOutput.innerHTML = "Carregando detalhes da API...";
+
+  // Chama a função assíncrona e espera o resultado
+  const detalhes = await buscarDetalhesVeiculoAPI(veiculoSelecionado.apiId);
+
+  // Exibe o resultado
+  if (detalhes) {
+    // Formata e exibe os dados encontrados
+    let htmlDetalhes = `<strong>Detalhes Extras para ${veiculoSelecionado.modelo} (Ref: ${detalhes.modeloReferencia}):</strong><br>`;
+    htmlDetalhes += `Valor FIPE: ${detalhes.valorFIPE}<br>`;
+    htmlDetalhes += `Recall Pendente: ${detalhes.recallPendente ? `Sim (${detalhes.recallDescricao || 'Detalhes não especificados'})` : 'Não'}<br>`;
+    htmlDetalhes += `Última Revisão: ${detalhes.ultimaRevisao || 'N/A'}<br>`;
+    htmlDetalhes += `Dica: ${detalhes.dicaManutencao || 'Nenhuma dica disponível.'}`;
+    divDetalhesExtrasOutput.innerHTML = htmlDetalhes;
+  } else {
+    // Exibe mensagem se não encontrado ou erro
+    divDetalhesExtrasOutput.innerHTML = `Não foram encontrados detalhes extras para o veículo com ID ${veiculoSelecionado.apiId} ou ocorreu um erro ao buscar. Verifique o console.`;
+  }
+});
+
+// --- Inicialização ---
+// ... (resto da inicialização) ...
+// Limpa a área de detalhes extras ao iniciar
+window.addEventListener('DOMContentLoaded', (event) => {
+    // ... (código existente)
+    if(divDetalhesExtrasOutput) {
+         divDetalhesExtrasOutput.innerHTML = 'Clique em "Ver Detalhes Extras" após selecionar um veículo.';
+    }
+});

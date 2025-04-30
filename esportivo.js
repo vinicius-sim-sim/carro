@@ -9,14 +9,8 @@ class CarroEsportivo extends Carro {
    * @param {string} modelo - O modelo do carro esportivo.
    * @param {string} cor - A cor do carro esportivo.
    */
-  constructor(modelo, cor) {
-    super(modelo, cor); // Chama o construtor da classe pai (Carro)
-
-    /**
-     * @type {boolean}
-     * @default false
-     * @description Indica se o turbo está ativado ou desativado.
-     */
+  constructor(modelo, cor, apiId) { // Adiciona apiId
+    super(modelo, cor, apiId); // Passa apiId para o construtor pai
     this.turboAtivado = false;
   }
 

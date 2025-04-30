@@ -8,32 +8,17 @@ class Carro {
      * @param {string} modelo - O modelo do carro.
      * @param {string} cor - A cor do carro.
      */
-    constructor(modelo, cor) {
-      /**
-       * @type {string}
-       * @description O modelo do carro.
-       */
+    constructor(modelo, cor, apiId) { // Adiciona apiId
       this.modelo = modelo;
-  
+      this.cor = cor;
+      this.velocidade = 0;
+      this.ligado = false;
       /**
        * @type {string}
-       * @description A cor do carro.
+       * @description O identificador único deste veículo para consulta na API simulada.
        */
-      this.cor = cor;
-  
-      /**
-       * @type {number}
-       * @default 0
-       * @description A velocidade atual do carro em km/h.
-       */
-      this.velocidade = 0;
-  
-      /**
-       * @type {boolean}
-       * @default false
-       * @description Indica se o carro está ligado ou desligado.
-       */
-      this.ligado = false;
+      this.apiId = apiId; // Armazena o apiId
+
     }
   
     /**
@@ -109,5 +94,6 @@ class Carro {
      */
     exibirInformacoes() {
       return `Modelo: ${this.modelo}, Cor: ${this.cor}, Ligado: ${this.ligado ? 'Sim' : 'Não'}, Velocidade: ${this.velocidade} km/h`;
+      
     }
-  }
+  }   

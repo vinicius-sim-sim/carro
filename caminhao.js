@@ -10,20 +10,9 @@ class Caminhao extends Carro {
    * @param {string} cor - A cor do caminhão.
    * @param {number} capacidadeCarga - A capacidade máxima de carga do caminhão em kg.
    */
-  constructor(modelo, cor, capacidadeCarga) {
-    super(modelo, cor);
-
-    /**
-     * @type {number}
-     * @description A capacidade máxima de carga do caminhão em kg.
-     */
+  constructor(modelo, cor, capacidadeCarga, apiId) { // Adiciona apiId
+    super(modelo, cor, apiId); // Passa apiId para o construtor pai
     this.capacidadeCarga = capacidadeCarga;
-
-    /**
-     * @type {number}
-     * @default 0
-     * @description A carga atual do caminhão em kg.
-     */
     this.cargaAtual = 0;
   }
 

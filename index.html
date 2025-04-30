@@ -10,33 +10,33 @@
     <h1>Garagem Inteligente</h1>
 
     <!-- Seção de Seleção e Exibição Central -->
-    <div class="garagem-controle">
-        <h2>Controle da Garagem</h2>
-        <p>Selecione um veículo para interagir:</p>
-        <button id="selectCarroBtn">Selecionar Carro Padrão</button>
-        <button id="selectEsportivoBtn">Selecionar Carro Esportivo</button>
-        <button id="selectCaminhaoBtn">Selecionar Caminhão</button>
+<div class="garagem-controle">
+    <h2>Controle da Garagem</h2>
+    <p>Selecione um veículo para interagir:</p>
+    <button id="selectCarroBtn">Selecionar Carro Padrão</button>
+    <button id="selectEsportivoBtn">Selecionar Carro Esportivo</button>
+    <button id="selectCaminhaoBtn">Selecionar Caminhão</button>
 
-        <h3>Veículo Selecionado:</h3>
-        <div id="informacoesVeiculo" class="output info-central">
-            Nenhum veículo selecionado. Crie e selecione um veículo.
-        </div>
-
-        <h3>Ações Genéricas:</h3>
-        <button onclick="chamarInteragir('ligar')">Ligar</button>
-        <button onclick="chamarInteragir('desligar')">Desligar</button>
-        <button onclick="chamarInteragir('acelerar')">Acelerar</button>
-        <button onclick="chamarInteragir('frear')">Frear</button>
-        <button onclick="chamarInteragir('ativarTurbo')">Ativar Turbo</button>
-        <button onclick="chamarInteragir('desativarTurbo')">Desativar Turbo</button>
-        <!-- Input para carga/descarga -->
-        <label for="pesoInteracao">Peso (kg):</label>
-        <input type="number" id="pesoInteracao" value="100" style="width: 60px;">
-        <button onclick="chamarInteragir('carregar')">Carregar</button>
-        <button onclick="chamarInteragir('descarregar')">Descarregar</button>
-        <!-- Adicione mais botões para outras ações se necessário (ex: buzinar) -->
-
+    <h3>Veículo Selecionado:</h3>
+    <div id="informacoesVeiculo" class="output info-central">
+        Nenhum veículo selecionado. Crie e selecione um veículo.
     </div>
+
+    <!-- NOVO: Botão e Área para Detalhes Extras -->
+    <button id="buscarDetalhesBtn">Ver Detalhes Extras (API)</button>
+    <div id="detalhesExtrasOutput" class="output" style="background-color: #e8f4f8; border-color: #bce8f1;">
+        <!-- Resultados da API serão exibidos aqui -->
+        Clique em "Ver Detalhes Extras" após selecionar um veículo.
+    </div>
+    <!-- FIM NOVO -->
+
+
+    <h3>Ações Genéricas:</h3>
+    <button onclick="chamarInteragir('ligar')">Ligar</button>
+    <button onclick="chamarInteragir('desligar')">Desligar</button>
+    <!-- ... resto dos botões de ação ... -->
+
+</div>
 
     <hr>
 
@@ -84,6 +84,8 @@
          <!-- Botões de ação específicos (exceto criar) removidos em favor dos genéricos -->
          <!-- Input de carga movido para a área de interação geral -->
     </div>
+
+    
 
 
     <!-- Scripts no final -->

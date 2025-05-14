@@ -1,78 +1,147 @@
 <!DOCTYPE html>
 <html>
-
 <head>
     <title>A Corrida da Herança - Garagem Inteligente</title>
     <link rel="stylesheet" href="style.css">
+    <!-- Para o Datepicker (opcional, mas recomendado) - Exemplo com flatpickr -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <style>
+        /* Estilos adicionais para as novas seções */
+        .manutencao-section {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border: 1px solid #eee;
+            border-radius: 5px;
+        }
+        .manutencao-section h4 {
+            margin-top: 0;
+            color: #444;
+        }
+        .manutencao-form label, .manutencao-form input, .manutencao-form textarea, .manutencao-form button {
+            display: block;
+            width: calc(100% - 12px); /* Ajustar padding/border */
+            margin-bottom: 10px;
+        }
+        .manutencao-form input[type="number"], .manutencao-form input[type="date"], .manutencao-form input[type="text"], .manutencao-form textarea {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .manutencao-form button {
+            width: auto; /* Botão não ocupa largura total */
+            padding: 10px 15px;
+        }
+        #historicoManutencao ul, #agendamentosFuturos ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        #historicoManutencao li, #agendamentosFuturos li {
+            background-color: #fff;
+            border: 1px solid #e0e0e0;
+            padding: 8px;
+            margin-bottom: 5px;
+            border-radius: 3px;
+        }
+    </style>
 </head>
-
 <body>
     <h1>Garagem Inteligente</h1>
 
-    <!-- Seção de Seleção e Exibição Central -->
-<div class="garagem-controle">
-    <h2>Controle da Garagem</h2>
-    <p>Selecione um veículo para interagir:</p>
-    <button id="selectCarroBtn">Selecionar Carro Padrão</button>
-    <button id="selectEsportivoBtn">Selecionar Carro Esportivo</button>
-    <button id="selectCaminhaoBtn">Selecionar Caminhão</button>
+    <div class="garagem-controle">
+        <h2>Controle da Garagem</h2>
+        <p>Selecione ou crie um veículo para interagir:</p>
+        <button id="selectCarroBtn">Selecionar Carro Padrão</button>
+        <button id="selectEsportivoBtn">Selecionar Carro Esportivo</button>
+        <button id="selectCaminhaoBtn">Selecionar Caminhão</button>
 
-    <h3>Veículo Selecionado:</h3>
-    <div id="informacoesVeiculo" class="output info-central">
-        Nenhum veículo selecionado. Crie e selecione um veículo.
+        <h3>Veículo Selecionado:</h3>
+        <div id="informacoesVeiculo" class="output info-central">
+            Nenhum veículo selecionado. Crie ou selecione um veículo.
+        </div>
+
+        <button id="buscarDetalhesBtn">Ver Detalhes Extras (API)</button>
+        <div id="detalhesExtrasOutput" class="output" style="background-color: #e8f4f8; border-color: #bce8f1;">
+            Clique em "Ver Detalhes Extras" após selecionar um veículo.
+        </div>
+
+        <h3>Ações Genéricas:</h3>
+        <button onclick="chamarInteragir('ligar')">Ligar</button>
+        <button onclick="chamarInteragir('desligar')">Desligar</button>
+        <button onclick="chamarInteragir('acelerar')">Acelerar</button>
+        <button onclick="chamarInteragir('frear')">Frear</button>
+        <br>
+        <!-- Ações específicas (algumas podem precisar de input) -->
+        <button onclick="chamarInteragir('ativarTurbo')">Ativar Turbo (Esportivo)</button>
+        <button onclick="chamarInteragir('desativarTurbo')">Desativar Turbo (Esportivo)</button>
+        <br>
+        <label for="pesoInteracao">Peso (kg):</label>
+        <input type="number" id="pesoInteracao" value="100" style="width: 80px; display: inline-block;">
+        <button onclick="chamarInteragir('carregar')">Carregar (Caminhão)</button>
+        <button onclick="chamarInteragir('descarregar')">Descarregar (Caminhão)</button>
+
+        <!-- SEÇÃO DE MANUTENÇÃO E AGENDAMENTO (aparece quando um veículo é selecionado) -->
+        <div id="secaoManutencaoVeiculo" class="manutencao-section" style="display: none;">
+            <h4>Gerenciar Manutenção para <span id="nomeVeiculoManutencao"></span></h4>
+
+            <div class="manutencao-form">
+                <h5>Registrar / Agendar Manutenção</h5>
+                <label for="manutencaoData">Data:</label>
+                <input type="date" id="manutencaoData">
+
+                <label for="manutencaoTipo">Tipo de Serviço:</label>
+                <input type="text" id="manutencaoTipo" placeholder="Ex: Troca de óleo">
+
+                <label for="manutencaoCusto">Custo (R$):</label>
+                <input type="number" id="manutencaoCusto" step="0.01" min="0" placeholder="Ex: 150.00">
+
+                <label for="manutencaoDescricao">Descrição (opcional):</label>
+                <textarea id="manutencaoDescricao" rows="3" placeholder="Detalhes adicionais..."></textarea>
+
+                <button id="btnAdicionarManutencao">Adicionar Manutenção</button>
+            </div>
+
+            <div id="historicoManutencaoContainer" class="manutencao-section">
+                <h4>Histórico de Manutenção</h4>
+                <div id="historicoManutencao">Nenhum histórico.</div>
+            </div>
+
+            <div id="agendamentosFuturosContainer" class="manutencao-section">
+                <h4>Agendamentos Futuros</h4>
+                <div id="agendamentosFuturos">Nenhum agendamento futuro.</div>
+            </div>
+        </div>
+        <!-- FIM SEÇÃO DE MANUTENÇÃO -->
     </div>
-
-    <!-- NOVO: Botão e Área para Detalhes Extras -->
-    <button id="buscarDetalhesBtn">Ver Detalhes Extras (API)</button>
-    <div id="detalhesExtrasOutput" class="output" style="background-color: #e8f4f8; border-color: #bce8f1;">
-        <!-- Resultados da API serão exibidos aqui -->
-        Clique em "Ver Detalhes Extras" após selecionar um veículo.
-    </div>
-    <!-- FIM NOVO -->
-
-
-    <h3>Ações Genéricas:</h3>
-    <button onclick="chamarInteragir('ligar')">Ligar</button>
-    <button onclick="chamarInteragir('desligar')">Desligar</button>
-    <!-- ... resto dos botões de ação ... -->
-
-</div>
-
     <hr>
 
-    <!-- Seção Carro Padrão (Simplificada) -->
+    <!-- Seção Carro Padrão -->
     <div class="container veiculo-container">
         <h2>Carro Padrão</h2>
         <img src="Imagens/carro.jpg" alt="Carro Padrão" class="veiculo-img">
-        <!-- Info será exibida na área central -->
         <div id="outputCarro" class="output">
-            <!-- Informações específicas do Carro Padrão podem ser exibidas aqui se necessário -->
-            Carro Padrão (Modelo: Volkswagen Gol gti, Cor: Branco) criado. Use os controles da garagem.
+            Carro Padrão (Modelo: Volkswagen Gol gti, Cor: Branco).
         </div>
-         <!-- Botões de ação específicos removidos em favor dos genéricos -->
     </div>
-
-     <hr>
+    <hr>
 
     <!-- Seção Carro Esportivo -->
     <div class="container veiculo-container">
         <h2>Carro Esportivo</h2>
-        <img src="Imagens/esportivo.png" alt="Carro Esportivo" class="veiculo-img"> <!-- Adicione uma imagem se tiver -->
+        <img src="Imagens/esportivo.png" alt="Carro Esportivo" class="veiculo-img">
         <label for="modeloEsportivo">Modelo:</label>
         <input type="text" id="modeloEsportivo" value="Corolla"><br>
         <label for="corEsportivo">Cor:</label>
         <input type="text" id="corEsportivo" value="Preto"><br>
         <button onclick="criarCarroEsportivo()">Criar/Recriar Carro Esportivo</button><br>
         <div id="outputEsportivo" class="output">Carro Esportivo ainda não criado.</div>
-         <!-- Botões de ação específicos removidos em favor dos genéricos -->
     </div>
-
     <hr>
 
     <!-- Seção Caminhão -->
     <div class="container veiculo-container">
         <h2>Caminhão</h2>
-         <img src="Imagens/caminhao.webp" alt="Caminhão" class="veiculo-img"> <!-- Adicione uma imagem se tiver -->
+         <img src="Imagens/caminhao.webp" alt="Caminhão" class="veiculo-img">
         <label for="modeloCaminhao">Modelo:</label>
         <input type="text" id="modeloCaminhao" value="Volvo FH"><br>
         <label for="corCaminhao">Cor:</label>
@@ -81,19 +150,14 @@
         <input type="number" id="capacidadeCaminhao" value="10000"><br>
         <button onclick="criarCaminhao()">Criar/Recriar Caminhão</button><br>
         <div id="outputCaminhao" class="output">Caminhão ainda não criado.</div>
-         <!-- Botões de ação específicos (exceto criar) removidos em favor dos genéricos -->
-         <!-- Input de carga movido para a área de interação geral -->
     </div>
 
-    
-
-
     <!-- Scripts no final -->
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script> <!-- Para o Datepicker -->
+    <script src="manutencao.js"></script>
     <script src="carro.js"></script>
     <script src="esportivo.js"></script>
     <script src="caminhao.js"></script>
     <script src="script.js"></script>
-
 </body>
-
 </html>

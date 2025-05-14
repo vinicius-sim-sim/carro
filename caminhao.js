@@ -1,27 +1,11 @@
-/**
- * @class Caminhao
- * @classdesc Representa um caminhão, que herda características da classe Carro e adiciona funcionalidades de carga.
- * @extends Carro
- */
 class Caminhao extends Carro {
-  /**
-   * @constructor
-   * @param {string} modelo - O modelo do caminhão.
-   * @param {string} cor - A cor do caminhão.
-   * @param {number} capacidadeCarga - A capacidade máxima de carga do caminhão em kg.
-   */
-  constructor(modelo, cor, capacidadeCarga, apiId) { // Adiciona apiId
-    super(modelo, cor, apiId); // Passa apiId para o construtor pai
+  constructor(modelo, cor, capacidadeCarga, apiId) {
+    super(modelo, cor, apiId);
     this.capacidadeCarga = capacidadeCarga;
     this.cargaAtual = 0;
+    // this.historicoManutencao já é inicializado pelo construtor de Carro
   }
 
-  /**
-   * @function carregar
-   * @description Carrega o caminhão com um determinado peso, desde que não exceda a capacidade máxima.
-   * @param {number} peso - O peso a ser carregado no caminhão em kg.
-   * @returns {void}
-   */
   carregar(peso) {
     if (this.cargaAtual + peso <= this.capacidadeCarga) {
       this.cargaAtual += peso;
@@ -31,12 +15,6 @@ class Caminhao extends Carro {
     }
   }
 
-  /**
-   * @function descarregar
-   * @description Descarrega o caminhão com um determinado peso, desde que não seja maior que a carga atual.
-   * @param {number} peso - O peso a ser descarregado do caminhão em kg.
-   * @returns {void}
-   */
   descarregar(peso) {
     if (this.cargaAtual - peso >= 0) {
       this.cargaAtual -= peso;
@@ -46,14 +24,33 @@ class Caminhao extends Carro {
     }
   }
 
-  /**
-   * @function exibirInformacoes
-   * @description Retorna uma string formatada com as informações do caminhão, incluindo as informações da classe pai (Carro) e a capacidade de carga e carga atual.
-   * @returns {string} - Uma string com as informações do caminhão.
-   * @override
-   */
   exibirInformacoes() {
-    const infoBase = super.exibirInformacoes(); // Obtém informações da classe pai
+    const infoBase = super.exibirInformacoes();
     return `${infoBase}, Capacidade de Carga: ${this.capacidadeCarga} kg, Carga Atual: ${this.cargaAtual} kg`;
+  }
+
+  // Os métodos adicionarManutencao e getHistoricoManutencaoFormatado são herdados de Carro.
+
+  toJSON() {
+    const jsonPai = super.toJSON();
+    return {
+        ...jsonPai,
+        tipoVeiculo: 'Caminhao',
+        capacidadeCarga: this.capacidadeCarga,
+        cargaAtual: this.cargaAtual
+    };
+  }
+
+  static fromJSON(json) {
+    if (!json) return null;
+    const caminhao = new Caminhao(json.modelo, json.cor, json.capacidadeCarga, json.apiId);
+    caminhao.velocidade = json.velocidade;
+    caminhao.ligado = json.ligado;
+    caminhao.cargaAtual = json.cargaAtual;
+    // historicoManutencao
+    if (json.historicoManutencao && Array.isArray(json.historicoManutencao)) {
+        caminhao.historicoManutencao = json.historicoManutencao.map(mJson => Manutencao.fromJSON(mJson)).filter(m => m !== null);
+    }
+    return caminhao;
   }
 }

@@ -113,6 +113,33 @@
         </div>
         <!-- FIM SEÇÃO DE MANUTENÇÃO -->
     </div>
+    
+        <!-- FIM Controle da Garagem -->
+    </div> <!-- Fecha div.garagem-controle -->
+
+    <!-- NOVA SEÇÃO: PREVISÃO DO TEMPO PARA VIAGEM -->
+    <div class="container" id="secaoPrevisaoViagem">
+        <h2>Conselheiro de Viagem: Previsão do Tempo no Destino</h2>
+        <p>Planejando uma viagem? Verifique o tempo no seu destino!</p>
+        <div class="previsao-input-group">
+            <label for="cidadeDestino">Digite a cidade de destino:</label>
+            <input type="text" id="cidadeDestino" placeholder="Ex: Paris, Londres, Tokyo">
+            <button id="buscarPrevisaoBtn">Buscar Previsão</button>
+        </div>
+
+        <div id="filtroDiasPrevisao" class="filtro-dias-container">
+            <button data-dias="1">Hoje</button>
+            <button data-dias="3">Próximos 3 Dias</button>
+            <button data-dias="5" class="active">Próximos 5 Dias</button>
+        </div>
+
+        <div id="previsaoContainer" class="output-previsao">
+            A previsão do tempo para a cidade de destino aparecerá aqui.
+        </div>
+    </div>
+    <hr>
+    <!-- Continua com as seções dos veículos -->
+
     <hr>
 
     <!-- Seção Carro Padrão -->

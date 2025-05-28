@@ -5,8 +5,29 @@ const CHAVE_LOCAL_STORAGE = 'garagemInteligente';
 let garagemDeVeiculos = []; // Array para armazenar todos os veículos
 let veiculoSelecionado = null;
 
+// --- CONSTANTES E VARIÁVEIS GLOBAIS (PREVISÃO DO TEMPO VIAGEM) ---
+const OPENWEATHER_API_KEY = "37f2106e487d40a6a4c2a574c4c37ef3"; // !!!!! IMPORTANTE: SUBSTITUA PELA SUA CHAVE !!!!!
+let previsoesCidadeCache = null; // Para armazenar os dados processados da última busca bem-sucedida
+let numDiasFiltroAtual = 5; // Padrão para exibir 5 dias
+
 // --- Elementos do DOM ---
 const divInformacoesVeiculo = document.getElementById("informacoesVeiculo");
+// ... (outros elementos do DOM existentes) ...
+const btnAdicionarManutencao = document.getElementById("btnAdicionarManutencao");
+const divHistoricoManutencao = document.getElementById("historicoManutencao");
+const divAgendamentosFuturos = document.getElementById("agendamentosFuturos");
+
+// --- ELEMENTOS DO DOM (PREVISÃO DO TEMPO VIAGEM) ---
+const inputCidadeDestino = document.getElementById("cidadeDestino");
+const btnBuscarPrevisao = document.getElementById("buscarPrevisaoBtn");
+const divPrevisaoContainer = document.getElementById("previsaoContainer");
+const divFiltroDiasPrevisao = document.getElementById("filtroDiasPrevisao");
+// script.js
+
+// --- Constantes e Variáveis Globais ---
+
+
+// --- Elementos do DOM ---
 const outputCarro = document.getElementById("outputCarro");
 const outputEsportivo = document.getElementById("outputEsportivo");
 const outputCaminhao = document.getElementById("outputCaminhao");
@@ -21,10 +42,6 @@ const manutencaoDataInput = document.getElementById("manutencaoData");
 const manutencaoTipoInput = document.getElementById("manutencaoTipo");
 const manutencaoCustoInput = document.getElementById("manutencaoCusto");
 const manutencaoDescricaoInput = document.getElementById("manutencaoDescricao");
-const btnAdicionarManutencao = document.getElementById("btnAdicionarManutencao");
-const divHistoricoManutencao = document.getElementById("historicoManutencao");
-const divAgendamentosFuturos = document.getElementById("agendamentosFuturos");
-
 
 // --- Funções de Persistência (LocalStorage) ---
 
@@ -448,6 +465,310 @@ async function buscarDetalhesVeiculoAPI(identificadorVeiculo) {
     }
 }
 
+// --- FUNÇÕES DE PREVISÃO DO TEMPO PARA VIAGEM ---
+
+/**
+ * Formata um objeto Date para uma string "Dia, DD/MM".
+ * @param {Date} dataObj O objeto Date a ser formatado.
+ * @returns {string} A data formatada.
+ */
+function formatarDataPrevisao(dataObj) {
+    const diasSemana = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+    const diaSemana = diasSemana[dataObj.getDay()];
+    const dia = String(dataObj.getDate()).padStart(2, '0');
+    const mes = String(dataObj.getMonth() + 1).padStart(2, '0'); // Mês é base 0
+    return `${diaSemana}, ${dia}/${mes}`;
+}
+
+/**
+ * Converte Kelvin para Celsius.
+ * @param {number} kelvin - Temperatura em Kelvin.
+ * @returns {number} Temperatura em Celsius, arredondada.
+ */
+function kelvinParaCelsius(kelvin) {
+    return Math.round(kelvin - 273.15);
+}
+
+/**
+ * Processa os dados brutos da API OpenWeatherMap (forecast 5 dias / 3 horas)
+ * e agrupa as informações por dia.
+ * @param {object} dadosApi - Os dados retornados pela API.
+ * @returns {Array<object>|null} Um array de objetos, cada um representando a previsão para um dia,
+ * ou null se os dados forem inválidos.
+ */
+function processarDadosPrevisao(dadosApi) {
+    if (!dadosApi || !dadosApi.list || dadosApi.list.length === 0) {
+        console.error("Dados da API inválidos ou vazios:", dadosApi);
+        return null;
+    }
+
+    const previsoesPorDia = {};
+
+    dadosApi.list.forEach(item => {
+        const dataHora = new Date(item.dt * 1000); // Timestamp é em segundos
+        const diaStr = dataHora.toISOString().split('T')[0]; // Formato YYYY-MM-DD
+
+        if (!previsoesPorDia[diaStr]) {
+            previsoesPorDia[diaStr] = {
+                dataObj: new Date(dataHora.getFullYear(), dataHora.getMonth(), dataHora.getDate()), // Apenas data, sem hora
+                entradasHorarias: [],
+                tempsMin: [],
+                tempsMax: []
+            };
+        }
+        previsoesPorDia[diaStr].entradasHorarias.push({
+            hora: `${String(dataHora.getHours()).padStart(2, '0')}:${String(dataHora.getMinutes()).padStart(2, '0')}`,
+            temp: kelvinParaCelsius(item.main.temp),
+            descricao: item.weather[0].description,
+            icone: item.weather[0].icon,
+            umidade: item.main.humidity,
+            ventoKmh: Math.round(item.wind.speed * 3.6) // m/s para km/h
+        });
+        previsoesPorDia[diaStr].tempsMin.push(kelvinParaCelsius(item.main.temp_min));
+        previsoesPorDia[diaStr].tempsMax.push(kelvinParaCelsius(item.main.temp_max));
+    });
+
+    // Monta o array final de previsões diárias
+    const resultadoFinal = Object.keys(previsoesPorDia).map(diaStr => {
+        const diaData = previsoesPorDia[diaStr];
+        const tempMinDia = Math.min(...diaData.tempsMin);
+        const tempMaxDia = Math.max(...diaData.tempsMax);
+
+        // Pega a descrição e ícone da entrada horária mais próxima do meio-dia (ou a primeira)
+        let entradaRepresentativa = diaData.entradasHorarias.find(e => e.hora === "12:00" || e.hora === "15:00");
+        if (!entradaRepresentativa) {
+            entradaRepresentativa = diaData.entradasHorarias[Math.floor(diaData.entradasHorarias.length / 2)];
+             if (!entradaRepresentativa) entradaRepresentativa = diaData.entradasHorarias[0]; // fallback
+        }
+
+
+        return {
+            dataObj: diaData.dataObj,
+            dataFmt: formatarDataPrevisao(diaData.dataObj),
+            temp_min: tempMinDia,
+            temp_max: tempMaxDia,
+            descricao: entradaRepresentativa ? entradaRepresentativa.descricao : "N/D",
+            icone: entradaRepresentativa ? entradaRepresentativa.icone : "01d",
+            entradasHorarias: diaData.entradasHorarias,
+            nomeCidade: dadosApi.city.name // Adiciona nome da cidade
+        };
+    }).sort((a, b) => a.dataObj - b.dataObj); // Garante a ordenação por data
+
+    return resultadoFinal;
+}
+
+/**
+ * Exibe a previsão do tempo no container HTML.
+ * @param {Array<object>} previsoesDiariasProcessadas - Array com as previsões processadas por dia.
+ * @param {number} numDiasParaExibir - Quantos dias de previsão devem ser mostrados.
+ */
+function exibirPrevisaoTempo(previsoesDiariasProcessadas, numDiasParaExibir) {
+    if (!divPrevisaoContainer) return;
+    divPrevisaoContainer.innerHTML = ""; // Limpa previsões anteriores
+
+    if (!previsoesDiariasProcessadas || previsoesDiariasProcessadas.length === 0) {
+        divPrevisaoContainer.innerHTML = "<p>Não foi possível obter a previsão do tempo.</p>";
+        return;
+    }
+    
+    const nomeCidade = previsoesDiariasProcessadas[0]?.nomeCidade || "Destino";
+    const tituloPrevisao = document.createElement('h3');
+    tituloPrevisao.textContent = `Previsão para ${nomeCidade}`;
+    tituloPrevisao.style.textAlign = 'center';
+    divPrevisaoContainer.appendChild(tituloPrevisao);
+
+    const previsoesParaExibir = previsoesDiariasProcessadas.slice(0, numDiasParaExibir);
+
+    previsoesParaExibir.forEach((dia, index) => {
+        const card = document.createElement("div");
+        card.classList.add("previsao-dia-card");
+        card.setAttribute('data-index', index); // Para identificar o card ao clicar
+
+        // Destaques (Desafio B)
+        if (dia.descricao.toLowerCase().includes("chuva") || dia.descricao.toLowerCase().includes("garoa")) {
+            card.classList.add("dia-chuvoso");
+        }
+        if (dia.temp_min < 10) { // Exemplo: considerar frio abaixo de 10°C
+            card.classList.add("dia-frio");
+        }
+        if (dia.temp_max > 32) { // Exemplo: considerar quente acima de 32°C
+            card.classList.add("dia-quente");
+        }
+        // Checa se alguma entrada horária tem vento forte (ex: > 30km/h)
+        if (dia.entradasHorarias.some(e => e.ventoKmh > 30)) {
+             card.classList.add("dia-aviso-vento");
+        }
+
+
+        const sumarioDiv = document.createElement('div');
+        sumarioDiv.classList.add('sumario');
+
+        const infoPrincipalDiv = document.createElement('div');
+        infoPrincipalDiv.classList.add('info-principal');
+
+        const icone = document.createElement("img");
+        icone.src = `https://openweathermap.org/img/wn/${dia.icone}@2x.png`;
+        icone.alt = dia.descricao;
+        infoPrincipalDiv.appendChild(icone);
+
+        const textoInfoDiv = document.createElement('div');
+        const dataTitulo = document.createElement("h4");
+        dataTitulo.textContent = dia.dataFmt + (index === 0 ? " (Hoje)" : "");
+        textoInfoDiv.appendChild(dataTitulo);
+
+        const descricaoP = document.createElement("p");
+        descricaoP.textContent = dia.descricao.charAt(0).toUpperCase() + dia.descricao.slice(1);
+        textoInfoDiv.appendChild(descricaoP);
+        infoPrincipalDiv.appendChild(textoInfoDiv);
+
+        sumarioDiv.appendChild(infoPrincipalDiv);
+
+        const temperaturasDiv = document.createElement('div');
+        temperaturasDiv.classList.add('temperaturas');
+        const tempMaxP = document.createElement("p");
+        tempMaxP.innerHTML = `Max: <span class="temp-max">${dia.temp_max}°C</span>`;
+        temperaturasDiv.appendChild(tempMaxP);
+
+        const tempMinP = document.createElement("p");
+        tempMinP.innerHTML = `Min: <span class="temp-min">${dia.temp_min}°C</span>`;
+        temperaturasDiv.appendChild(tempMinP);
+        sumarioDiv.appendChild(temperaturasDiv);
+        
+        card.appendChild(sumarioDiv);
+
+        // Div para detalhes horários (Desafio A - Expansão)
+        const detalhesDiv = document.createElement('div');
+        detalhesDiv.classList.add('detalhes-horarios');
+        
+        const detalhesTitulo = document.createElement('h5');
+        detalhesTitulo.textContent = 'Detalhes por Hora:';
+        detalhesDiv.appendChild(detalhesTitulo);
+
+        const listaHorariosUl = document.createElement('ul');
+        dia.entradasHorarias.forEach(entrada => {
+            const itemLi = document.createElement('li');
+            itemLi.textContent = `${entrada.hora} - ${entrada.temp}°C, ${entrada.descricao}, Umidade: ${entrada.umidade}%, Vento: ${entrada.ventoKmh} km/h`;
+            listaHorariosUl.appendChild(itemLi);
+        });
+        detalhesDiv.appendChild(listaHorariosUl);
+        card.appendChild(detalhesDiv);
+
+        card.addEventListener('click', toggleDetalhesDia);
+
+        divPrevisaoContainer.appendChild(card);
+    });
+}
+
+/**
+ * Alterna a exibição dos detalhes horários de um dia.
+ * @param {Event} event - O evento de clique.
+ */
+function toggleDetalhesDia(event) {
+    const card = event.currentTarget; // O .previsao-dia-card que foi clicado
+    const detalhesDiv = card.querySelector('.detalhes-horarios');
+    if (detalhesDiv) {
+        detalhesDiv.style.display = detalhesDiv.style.display === 'none' || detalhesDiv.style.display === '' ? 'block' : 'none';
+    }
+}
+
+/**
+ * Busca os dados da previsão do tempo na API OpenWeatherMap.
+ * @param {string} cidade - O nome da cidade.
+ * @returns {Promise<object|null>} Os dados da API ou null em caso de erro.
+ */
+async function buscarDadosOpenWeatherMap(cidade) {
+    if (OPENWEATHER_API_KEY === "SUA_CHAVE_API_OPENWEATHERMAP_AQUI" || !OPENWEATHER_API_KEY) {
+        console.error("Chave da API OpenWeatherMap não configurada.");
+        if(divPrevisaoContainer) divPrevisaoContainer.innerHTML = "<p style='color:red; text-align:center;'>ERRO: Chave da API OpenWeatherMap não configurada no script.js.</p>";
+        return null;
+    }
+    if (!cidade) {
+        if(divPrevisaoContainer) divPrevisaoContainer.innerHTML = "<p style='color:orange; text-align:center;'>Por favor, digite o nome da cidade.</p>";
+        return null;
+    }
+
+    const url = `https://api.openweathermap.org/data/2.5/forecast?q=${encodeURIComponent(cidade)}&appid=${OPENWEATHER_API_KEY}&lang=pt_br`;
+    // units=metric para Celsius é padrão quando não especificado, mas a conversão Kelvin->Celsius é feita manualmente.
+    // Se a API retornar Kelvin, a função kelvinParaCelsius cuidará disso.
+    // Poderia adicionar &units=metric na URL também para a API já retornar em Celsius,
+    // mas a conversão manual dá mais controle e é bom para aprender.
+    // Para consistência e menos processamento manual, vamos adicionar units=metric:
+    const urlComUnits = `https://api.openweathermap.org/data/2.5/forecast?q=${encodeURIComponent(cidade)}&appid=${OPENWEATHER_API_KEY}&units=metric&lang=pt_br`;
+
+
+    if(divPrevisaoContainer) divPrevisaoContainer.innerHTML = `<p style="text-align:center;">Buscando previsão para ${cidade}...</p>`;
+
+    try {
+        const response = await fetch(urlComUnits);
+        if (!response.ok) {
+            if (response.status === 401) {
+                throw new Error("Chave da API inválida ou não autorizada.");
+            } else if (response.status === 404) {
+                throw new Error(`Cidade "${cidade}" não encontrada.`);
+            } else {
+                throw new Error(`Erro na API: ${response.status} ${response.statusText}`);
+            }
+        }
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error("Erro ao buscar previsão do tempo:", error);
+        if(divPrevisaoContainer) divPrevisaoContainer.innerHTML = `<p style='color:red; text-align:center;'>Erro ao buscar previsão: ${error.message}</p>`;
+        return null;
+    }
+}
+
+/**
+ * Inicia o processo de busca e exibição da previsão do tempo.
+ */
+async function iniciarBuscaPrevisao() {
+    const cidade = inputCidadeDestino.value.trim();
+    if (!cidade) {
+        alert("Por favor, digite o nome da cidade.");
+        return;
+    }
+
+    const dadosApi = await buscarDadosOpenWeatherMap(cidade);
+    if (dadosApi) {
+        previsoesCidadeCache = processarDadosPrevisao(dadosApi);
+        if (previsoesCidadeCache) {
+            exibirPrevisaoTempo(previsoesCidadeCache, numDiasFiltroAtual); // Exibe com o filtro atual
+        } else {
+            if(divPrevisaoContainer) divPrevisaoContainer.innerHTML = "<p style='color:red; text-align:center;'>Não foi possível processar os dados da previsão.</p>";
+        }
+    }
+    // Se dadosApi for null, a mensagem de erro já foi exibida por buscarDadosOpenWeatherMap
+}
+
+/**
+ * Configura os botões de filtro de dias.
+ */
+function configurarFiltrosDeDias() {
+    if (!divFiltroDiasPrevisao) return;
+
+    const botoesFiltro = divFiltroDiasPrevisao.querySelectorAll("button");
+    botoesFiltro.forEach(botao => {
+        botao.addEventListener("click", (event) => {
+            // Remove a classe 'active' de todos os botões
+            botoesFiltro.forEach(b => b.classList.remove("active"));
+            // Adiciona 'active' ao botão clicado
+            event.currentTarget.classList.add("active");
+
+            numDiasFiltroAtual = parseInt(event.currentTarget.getAttribute("data-dias"));
+            if (previsoesCidadeCache) { // Se já temos dados em cache
+                exibirPrevisaoTempo(previsoesCidadeCache, numDiasFiltroAtual);
+            } else if (inputCidadeDestino.value.trim()) {
+                // Se não há cache mas há uma cidade no input, tenta buscar
+                iniciarBuscaPrevisao();
+            } else {
+                 // Se não há cache e nem cidade, apenas atualiza o estado do botão
+                if(divPrevisaoContainer) divPrevisaoContainer.innerHTML = "<p>Digite uma cidade para ver a previsão.</p>";
+            }
+        });
+    });
+}
+
+// --- FIM DAS FUNÇÕES DE PREVISÃO DO TEMPO ---
 
 // --- Event Listeners ---
 document.getElementById("selectCarroBtn").addEventListener("click", () => selecionarVeiculoPorTipoOuCriar('carro'));
@@ -484,7 +805,24 @@ btnBuscarDetalhes.addEventListener('click', async () => {
   } else {
     divDetalhesExtrasOutput.innerHTML = `Não foram encontrados detalhes extras para o veículo com ID ${veiculoSelecionado.apiId} ou ocorreu um erro ao buscar.`;
   }
-});
+}); // <--- CORRIGIDO: Este ");" fecha corretamente o addEventListener de btnBuscarDetalhes
+
+// NOVO: Listener para o botão de buscar previsão do tempo
+if (btnBuscarPrevisao) { // Verifica se o elemento btnBuscarPrevisao existe no HTML
+    btnBuscarPrevisao.addEventListener("click", iniciarBuscaPrevisao);
+}
+
+// Permite buscar pressionando Enter no campo da cidade
+if (inputCidadeDestino) { // Verifica se o elemento inputCidadeDestino existe no HTML
+    inputCidadeDestino.addEventListener("keypress", function(event) {
+        // Verifica se a tecla pressionada foi "Enter"
+        if (event.key === "Enter") {
+            event.preventDefault(); // Impede o comportamento padrão do Enter (que poderia ser submeter um formulário, por exemplo)
+            iniciarBuscaPrevisao(); // Chama a mesma função que o botão de busca
+        }
+    });
+}
+// NÃO HÁ MAIS UM ');' EXTRA AQUI
 
 
 // --- Inicialização ---
@@ -513,4 +851,13 @@ window.addEventListener('DOMContentLoaded', () => {
     } else {
         console.warn("Flatpickr não carregado. O input de data será o padrão do navegador.");
     }
+
+    // NOVO: Configurações para a Previsão do Tempo
+    if (OPENWEATHER_API_KEY === "SUA_CHAVE_API_OPENWEATHERMAP_AQUI" || !OPENWEATHER_API_KEY) {
+        console.warn("ATENÇÃO: Chave da API OpenWeatherMap não configurada no arquivo script.js!");
+        if (divPrevisaoContainer) { // Garante que o elemento existe antes de tentar usá-lo
+            divPrevisaoContainer.innerHTML = "<p style='color:red; text-align:center;'><strong>ATENÇÃO:</strong> Configure sua chave da API OpenWeatherMap no arquivo <code>script.js</code> para usar a previsão do tempo.</p>";
+        }
+    }
+    configurarFiltrosDeDias(); // Configura os botões de filtro de dias para a previsão
 });

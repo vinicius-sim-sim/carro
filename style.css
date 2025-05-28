@@ -131,3 +131,205 @@ hr {
     background-color: #ccc; /* Define a cor da linha horizontal */
     margin: 25px 0; /* Define as margens superior e inferior da linha horizontal */
 }
+/* style.css - Adições para Previsão do Tempo Interativa */
+
+#secaoPrevisaoViagem {
+    background-color: #f0f8ff; /* Um azul claro para diferenciar */
+    border: 1px solid #cce7ff;
+    padding: 20px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+    text-align: left; /* Alinha o conteúdo à esquerda dentro desta seção */
+}
+
+#secaoPrevisaoViagem h2 {
+    text-align: center;
+    color: #337ab7;
+}
+
+#secaoPrevisaoViagem p {
+    text-align: center;
+    margin-bottom: 15px;
+}
+
+.previsao-input-group {
+    display: flex;
+    align-items: center;
+    justify-content: center; /* Centraliza o input e botão */
+    gap: 10px; /* Espaço entre label, input e botão */
+    margin-bottom: 20px;
+}
+
+.previsao-input-group label {
+    min-width: auto; /* Remove o min-width dos labels gerais */
+    text-align: left;
+    margin-right: 5px;
+}
+
+#cidadeDestino {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    flex-grow: 1; /* Permite que o input cresça */
+    max-width: 300px; /* Limita a largura máxima do input */
+}
+
+#buscarPrevisaoBtn {
+    padding: 8px 15px;
+    background-color: #5cb85c; /* Verde */
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+#buscarPrevisaoBtn:hover {
+    background-color: #4cae4c;
+}
+
+.filtro-dias-container {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.filtro-dias-container button {
+    background-color: #f0f0f0;
+    color: #333;
+    border: 1px solid #ccc;
+    margin: 0 5px;
+}
+
+.filtro-dias-container button.active {
+    background-color: #007bff;
+    color: white;
+    border-color: #007bff;
+}
+
+.output-previsao {
+    margin-top: 15px;
+    padding: 15px;
+    background-color: #fff;
+    border: 1px solid #eee;
+    border-radius: 5px;
+    min-height: 100px;
+}
+
+.previsao-dia-card {
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 15px;
+    margin-bottom: 10px;
+    display: flex;
+    flex-direction: column; /* Para detalhes abaixo */
+    cursor: pointer; /* Indica que é clicável */
+    transition: box-shadow 0.2s ease-in-out;
+}
+
+.previsao-dia-card:hover {
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.previsao-dia-card .sumario {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.previsao-dia-card .info-principal {
+    display: flex;
+    align-items: center;
+}
+
+.previsao-dia-card img {
+    width: 50px; /* Tamanho do ícone do tempo */
+    height: 50px;
+    margin-right: 10px;
+}
+
+.previsao-dia-card h4 {
+    margin: 0 0 5px 0;
+    color: #337ab7;
+}
+
+.previsao-dia-card p {
+    margin: 2px 0;
+    font-size: 0.9em;
+    text-align: left; /* Alinhamento do texto dentro do card */
+}
+
+.previsao-dia-card .temperaturas {
+    text-align: right;
+}
+
+.previsao-dia-card .temp-max {
+    font-weight: bold;
+    color: #d9534f; /* Vermelho para max */
+}
+
+.previsao-dia-card .temp-min {
+    color: #5bc0de; /* Azul para min */
+}
+
+.detalhes-horarios {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px dashed #ccc;
+    display: none; /* Oculto por padrão */
+    font-size: 0.85em;
+}
+
+.detalhes-horarios h5 {
+    margin-top: 0;
+    margin-bottom: 8px;
+    color: #555;
+}
+.detalhes-horarios ul {
+    list-style: none;
+    padding-left: 0;
+}
+.detalhes-horarios li {
+    padding: 4px 0;
+    border-bottom: 1px dotted #eee;
+}
+.detalhes-horarios li:last-child {
+    border-bottom: none;
+}
+
+
+/* Destaques de Condições (Desafio B) */
+.dia-chuvoso {
+    border-left: 5px solid #428bca; /* Azul para chuva */
+}
+.dia-frio {
+    background-color: #e0f7fa; /* Ciano claro para frio */
+}
+.dia-quente {
+    background-color: #fff3e0; /* Laranja claro para quente */
+}
+.dia-aviso-vento {
+    /* Pode adicionar um ícone ou borda específica */
+    border-right: 5px solid #f0ad4e; /* Laranja para vento forte */
+}
+
+/* Responsividade básica para a seção de previsão */
+@media (max-width: 600px) {
+    .previsao-input-group {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    #cidadeDestino {
+        max-width: none; /* Ocupa a largura disponível */
+        margin-bottom: 10px;
+    }
+    .previsao-dia-card .sumario {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .previsao-dia-card .temperaturas {
+        text-align: left;
+        margin-top: 5px;
+    }
+}

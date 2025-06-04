@@ -484,8 +484,11 @@ function formatarDataPrevisao(dataObj) {
  * Converte Kelvin para Celsius.
  * @param {number} kelvin - Temperatura em Kelvin.
  * @returns {number} Temperatura em Celsius, arredondada.
+ * @deprecated Esta função não é mais necessária se units=metric for usado na API.
  */
 function kelvinParaCelsius(kelvin) {
+    // Esta função não é mais necessária se units=metric for usado na API,
+    // mas mantida caso haja outra fonte de dados em Kelvin.
     return Math.round(kelvin - 273.15);
 }
 
@@ -518,19 +521,22 @@ function processarDadosPrevisao(dadosApi) {
         }
         previsoesPorDia[diaStr].entradasHorarias.push({
             hora: `${String(dataHora.getHours()).padStart(2, '0')}:${String(dataHora.getMinutes()).padStart(2, '0')}`,
-            temp: kelvinParaCelsius(item.main.temp),
+            // CORREÇÃO: Usar item.main.temp diretamente (já está em Celsius devido a units=metric) e arredondar.
+            temp: Math.round(item.main.temp),
             descricao: item.weather[0].description,
             icone: item.weather[0].icon,
             umidade: item.main.humidity,
             ventoKmh: Math.round(item.wind.speed * 3.6) // m/s para km/h
         });
-        previsoesPorDia[diaStr].tempsMin.push(kelvinParaCelsius(item.main.temp_min));
-        previsoesPorDia[diaStr].tempsMax.push(kelvinParaCelsius(item.main.temp_max));
+        // CORREÇÃO: Usar item.main.temp_min e item.main.temp_max diretamente e arredondar.
+        previsoesPorDia[diaStr].tempsMin.push(Math.round(item.main.temp_min));
+        previsoesPorDia[diaStr].tempsMax.push(Math.round(item.main.temp_max));
     });
 
     // Monta o array final de previsões diárias
     const resultadoFinal = Object.keys(previsoesPorDia).map(diaStr => {
         const diaData = previsoesPorDia[diaStr];
+        // As temperaturas mínimas e máximas do dia são calculadas a partir dos valores já em Celsius.
         const tempMinDia = Math.min(...diaData.tempsMin);
         const tempMaxDia = Math.max(...diaData.tempsMax);
 
@@ -545,8 +551,8 @@ function processarDadosPrevisao(dadosApi) {
         return {
             dataObj: diaData.dataObj,
             dataFmt: formatarDataPrevisao(diaData.dataObj),
-            temp_min: tempMinDia,
-            temp_max: tempMaxDia,
+            temp_min: tempMinDia, // Já arredondado
+            temp_max: tempMaxDia, // Já arredondado
             descricao: entradaRepresentativa ? entradaRepresentativa.descricao : "N/D",
             icone: entradaRepresentativa ? entradaRepresentativa.icone : "01d",
             entradasHorarias: diaData.entradasHorarias,
@@ -626,11 +632,11 @@ function exibirPrevisaoTempo(previsoesDiariasProcessadas, numDiasParaExibir) {
         const temperaturasDiv = document.createElement('div');
         temperaturasDiv.classList.add('temperaturas');
         const tempMaxP = document.createElement("p");
-        tempMaxP.innerHTML = `Max: <span class="temp-max">${dia.temp_max}°C</span>`;
+        tempMaxP.innerHTML = `Max: <span class="temp-max">${dia.temp_max}°C</span>`; // dia.temp_max já está correto
         temperaturasDiv.appendChild(tempMaxP);
 
         const tempMinP = document.createElement("p");
-        tempMinP.innerHTML = `Min: <span class="temp-min">${dia.temp_min}°C</span>`;
+        tempMinP.innerHTML = `Min: <span class="temp-min">${dia.temp_min}°C</span>`; // dia.temp_min já está correto
         temperaturasDiv.appendChild(tempMinP);
         sumarioDiv.appendChild(temperaturasDiv);
         
@@ -647,6 +653,7 @@ function exibirPrevisaoTempo(previsoesDiariasProcessadas, numDiasParaExibir) {
         const listaHorariosUl = document.createElement('ul');
         dia.entradasHorarias.forEach(entrada => {
             const itemLi = document.createElement('li');
+            // entrada.temp já está correta
             itemLi.textContent = `${entrada.hora} - ${entrada.temp}°C, ${entrada.descricao}, Umidade: ${entrada.umidade}%, Vento: ${entrada.ventoKmh} km/h`;
             listaHorariosUl.appendChild(itemLi);
         });
@@ -677,7 +684,7 @@ function toggleDetalhesDia(event) {
  * @returns {Promise<object|null>} Os dados da API ou null em caso de erro.
  */
 async function buscarDadosOpenWeatherMap(cidade) {
-    if (OPENWEATHER_API_KEY === "SUA_CHAVE_API_OPENWEATHERMAP_AQUI" || !OPENWEATHER_API_KEY) {
+    if (OPENWEATHER_API_KEY === "37f2106e487d40a6a4c2a574c4c37ef3" || !OPENWEATHER_API_KEY) {
         console.error("Chave da API OpenWeatherMap não configurada.");
         if(divPrevisaoContainer) divPrevisaoContainer.innerHTML = "<p style='color:red; text-align:center;'>ERRO: Chave da API OpenWeatherMap não configurada no script.js.</p>";
         return null;
@@ -687,12 +694,7 @@ async function buscarDadosOpenWeatherMap(cidade) {
         return null;
     }
 
-    const url = `https://api.openweathermap.org/data/2.5/forecast?q=${encodeURIComponent(cidade)}&appid=${OPENWEATHER_API_KEY}&lang=pt_br`;
-    // units=metric para Celsius é padrão quando não especificado, mas a conversão Kelvin->Celsius é feita manualmente.
-    // Se a API retornar Kelvin, a função kelvinParaCelsius cuidará disso.
-    // Poderia adicionar &units=metric na URL também para a API já retornar em Celsius,
-    // mas a conversão manual dá mais controle e é bom para aprender.
-    // Para consistência e menos processamento manual, vamos adicionar units=metric:
+    // A URL já inclui units=metric, então a API retorna temperaturas em Celsius.
     const urlComUnits = `https://api.openweathermap.org/data/2.5/forecast?q=${encodeURIComponent(cidade)}&appid=${OPENWEATHER_API_KEY}&units=metric&lang=pt_br`;
 
 
@@ -853,7 +855,7 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 
     // NOVO: Configurações para a Previsão do Tempo
-    if (OPENWEATHER_API_KEY === "SUA_CHAVE_API_OPENWEATHERMAP_AQUI" || !OPENWEATHER_API_KEY) {
+    if (OPENWEATHER_API_KEY === "37f2106e487d40a6a4c2a574c4c37ef3" || !OPENWEATHER_API_KEY) {
         console.warn("ATENÇÃO: Chave da API OpenWeatherMap não configurada no arquivo script.js!");
         if (divPrevisaoContainer) { // Garante que o elemento existe antes de tentar usá-lo
             divPrevisaoContainer.innerHTML = "<p style='color:red; text-align:center;'><strong>ATENÇÃO:</strong> Configure sua chave da API OpenWeatherMap no arquivo <code>script.js</code> para usar a previsão do tempo.</p>";

@@ -13,7 +13,9 @@ const app = express();
 // Define a porta. Usa a variável de ambiente PORT (para deploy) ou 3001 por padrão.
 // Use uma porta diferente daquela que seu frontend pode estar rodando (ex: 3000, 5500, etc.)
 const port = process.env.PORT || 3001;
-const apiKey = process.env.OPENWEATHER_API_KEY;
+let apiKey = process.env.OPENWEATHER_API_KEY;
+
+
 
 // Middleware para permitir que o frontend (rodando em outra porta/origem) acesse este backend
 // (CORS - Cross-Origin Resource Sharing)

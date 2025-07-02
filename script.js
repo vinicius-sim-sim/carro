@@ -313,7 +313,7 @@ async function buscarDadosOpenWeatherMap(cidade) {
 
     if (divPrevisaoContainer) divPrevisaoContainer.innerHTML = `<p style="text-align:center;">Buscando previsão para ${cidade}...</p>`;
 
-    const backendUrl = 'https://carro-h9eu.onrender.com'; // MUDE AQUI SE SUA URL FOR DIFERENTE
+    const backendUrl = 'https://carro-8fvo.onrender.com'; // MUDE AQUI SE SUA URL FOR DIFERENTE
     const urlApi = `${backendUrl}/api/previsao/${encodeURIComponent(cidade)}`;
 
     try {

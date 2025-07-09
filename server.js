@@ -1,79 +1,88 @@
 // server.js
 
-// Importações
+// ------------------- IMPORTAÇÕES -------------------
 import express from 'express';
 import dotenv from 'dotenv';
 import axios from 'axios';
-import cors from 'cors'; // 1. IMPORTE O PACOTE CORS
+import cors from 'cors';
+import mongoose from 'mongoose';
 
-// Carrega variáveis de ambiente do arquivo .env
-dotenv.config();
+// ------------------- CONFIGURAÇÃO INICIAL -------------------
+dotenv.config(); // Carrega as variáveis do arquivo .env
 
-// Inicializa o aplicativo Express
 const app = express();
 const port = process.env.PORT || 3001;
-const apiKey = process.env.OPENWEATHER_API_KEY;
 
-// 2. CONFIGURE AS OPÇÕES DO CORS
-const corsOptions = {
-    // Especifique EXATAMENTE qual origem (seu site no Vercel) tem permissão.
-    // Isso é muito mais seguro do que usar '*'.
-    origin: 'https://carro-chi.vercel.app',
-    optionsSuccessStatus: 200 // Para navegadores mais antigos
-};
+// Middlewares
+app.use(cors({ origin: 'https://carro-chi.vercel.app' })); // Configura o CORS
+app.use(express.json()); // Permite o servidor entender JSON
 
-// 3. USE O MIDDLEWARE DO CORS
-app.use(cors(corsOptions));
+// ------------------- CONEXÃO COM O MONGODB ATLAS -------------------
+const mongoUri = process.env.MONGO_URI_CRUD;
 
-// O seu middleware antigo pode ser removido agora:
-/*
-app.use((req, res, next) => {
-    res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
-    next();
-});
-*/
+async function connectDatabase() {
+  if (!mongoUri) {
+    console.error("ERRO FATAL: A variável de ambiente MONGO_URI_CRUD não foi definida.");
+    process.exit(1); // Encerra o programa se a URI não estiver configurada
+  }
 
+  try {
+    // Tenta conectar ao banco de dados
+    await mongoose.connect(mongoUri);
+    console.log("🚀 Conectado com sucesso ao MongoDB Atlas via Mongoose!");
 
-// ----- SEU ENDPOINT (continua igual) -----
-app.get('/api/previsao/:cidade', async (req, res) => {
-    const { cidade } = req.params;
+    // Monitora eventos após a conexão inicial
+    mongoose.connection.on('error', (err) => console.error("❌ Erro de conexão do Mongoose:", err));
+    mongoose.connection.on('disconnected', () => console.warn("⚠️ Mongoose desconectado."));
 
-    if (!apiKey) {
-        console.error("[Servidor] ERRO: Chave da API não configurada.");
-        return res.status(500).json({ error: 'Chave da API não configurada no servidor.' });
-    }
-    if (!cidade) {
-        return res.status(400).json({ error: 'Nome da cidade é obrigatório.' });
-    }
+  } catch (error) {
+    console.error("❌ ERRO FATAL ao tentar conectar ao MongoDB:", error.message);
+    process.exit(1); // Encerra o programa se a conexão inicial falhar
+  }
+}
 
-    const weatherAPIUrl = `https://api.openweathermap.org/data/2.5/forecast?q=${encodeURIComponent(cidade)}&appid=${apiKey}&units=metric&lang=pt_br`;
+// ------------------- ROTAS (ENDPOINTS) DA API -------------------
 
-    console.log(`[Servidor] Recebida requisição para /api/previsao/${cidade}.`);
-
-    try {
-        const apiResponse = await axios.get(weatherAPIUrl);
-        console.log('[Servidor] Dados recebidos da OpenWeatherMap com sucesso.');
-        res.json(apiResponse.data);
-    } catch (error) {
-        console.error("[Servidor] Erro ao buscar previsão na OpenWeatherMap:", error.response?.data || error.message);
-        const status = error.response?.status || 500;
-        const message = error.response?.data?.message || 'Erro interno ao buscar previsão do tempo.';
-        res.status(status).json({ error: message });
-    }
-});
-
-// ----- Rota Raiz para Teste -----
+// Rota principal para teste
 app.get('/', (req, res) => {
-    res.send('Servidor backend da Garagem Inteligente está rodando!');
+  res.send('API da Garagem Inteligente está no ar!');
 });
 
-// --- Inicia o servidor ---
-app.listen(port, () => {
-    console.log(`Servidor backend rodando em http://localhost:${port}`);
-    if (!apiKey) {
-        console.warn(`!!! ATENÇÃO: Variável de ambiente OPENWEATHER_API_KEY NÃO encontrada.`);
-    } else {
-        console.log("Chave da API OpenWeatherMap carregada com sucesso.");
-    }
+// Rota para previsão do tempo
+app.get('/api/previsao/:cidade', async (req, res) => {
+  const { cidade } = req.params;
+  const apiKey = process.env.OPENWEATHER_API_KEY;
+
+  if (!apiKey) {
+    return res.status(500).json({ error: 'Chave da API de clima não configurada no servidor.' });
+  }
+
+  const weatherAPIUrl = `https://api.openweathermap.org/data/2.5/forecast?q=${cidade}&appid=${apiKey}&units=metric&lang=pt_br`;
+
+  try {
+    const response = await axios.get(weatherAPIUrl);
+    res.json(response.data);
+  } catch (error) {
+    const status = error.response?.status || 500;
+    const message = error.response?.data?.message || 'Erro ao buscar previsão do tempo.';
+    res.status(status).json({ error: message });
+  }
 });
+
+
+// ------------------- INICIALIZAÇÃO DO SERVIDOR -------------------
+async function startServer() {
+  // 1. Primeiro, conecta ao banco de dados
+  await connectDatabase();
+
+  // 2. Se a conexão for bem-sucedida, inicia o servidor web
+  app.listen(port, () => {
+    console.log(`✅ Servidor rodando na porta: ${port}`);
+    if (!process.env.OPENWEATHER_API_KEY) {
+      console.warn("-> ATENÇÃO: OPENWEATHER_API_KEY não foi encontrada no .env");
+    }
+  });
+}
+
+// Inicia todo o processo
+startServer();

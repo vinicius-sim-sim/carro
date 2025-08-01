@@ -174,38 +174,51 @@ function criarCarroPadraoSeNaoExistir() {
     }
 }
 
-// ===================================================================
-// FUNÇÕES QUE JÁ EXISTIAM (mas agora estão completas)
-// ===================================================================
-
+/**
+ * [FUNÇÃO MODIFICADA]
+ * Coleta dados do formulário e chama a função `criarVeiculo`.
+ */
 function criarCarroEsportivo() {
-    const modelo = document.getElementById("modeloEsportivo").value;
-    const cor = document.getElementById("corEsportivo").value;
-    if (modelo && cor) {
-        // Exemplo de como gerar um apiId único para novos veículos
-        const apiId = `esportivo-${modelo.toLowerCase().replace(/\s/g, '-')}-${Date.now()}`;
-        const novoEsportivo = new CarroEsportivo(modelo, cor, apiId);
-        garagemDeVeiculos.push(novoEsportivo);
-        selecionarVeiculoPorInstancia(novoEsportivo);
-        salvarGaragemNoLocalStorage();
-    } else {
-        alert("Por favor, preencha o modelo e a cor do carro esportivo.");
+    // Aqui usamos os inputs do HTML para pegar os dados.
+    // É importante que os campos `placa`, `marca`, `modelo` e `ano` existam no formulário ou sejam preenchidos de alguma forma.
+    // Para este exemplo, vamos adicionar um prompt para a placa, que é única.
+    const placa = prompt("Digite a PLACA do carro esportivo (ex: ESP0RTE):");
+    if (!placa) {
+        alert("A criação foi cancelada. A placa é obrigatória.");
+        return;
     }
+
+    const dadosVeiculo = {
+        placa: placa,
+        marca: document.getElementById("modeloEsportivo").value || "Toyota",
+        modelo: "Esportivo Genérico", // Você pode ajustar isso
+        ano: new Date().getFullYear(), // Ano atual como padrão
+        cor: document.getElementById("corEsportivo").value || "Preto"
+    };
+    
+    criarVeiculo(dadosVeiculo);
 }
 
+/**
+ * [FUNÇÃO MODIFICADA]
+ * Coleta dados do formulário e chama a função `criarVeiculo`.
+ */
 function criarCaminhao() {
-    const modelo = document.getElementById("modeloCaminhao").value;
-    const cor = document.getElementById("corCaminhao").value;
-    const capacidade = document.getElementById("capacidadeCaminhao").value;
-    if (modelo && cor && capacidade) {
-        const apiId = `caminhao-${modelo.toLowerCase().replace(/\s/g, '-')}-${Date.now()}`;
-        const novoCaminhao = new Caminhao(modelo, cor, parseInt(capacidade), apiId);
-        garagemDeVeiculos.push(novoCaminhao);
-        selecionarVeiculoPorInstancia(novoCaminhao);
-        salvarGaragemNoLocalStorage();
-    } else {
-        alert("Por favor, preencha todos os campos do caminhão.");
+    const placa = prompt("Digite a PLACA do caminhão (ex: CAM1NH4O):");
+    if (!placa) {
+        alert("A criação foi cancelada. A placa é obrigatória.");
+        return;
     }
+
+    const dadosVeiculo = {
+        placa: placa,
+        marca: document.getElementById("modeloCaminhao").value || "Volvo",
+        modelo: "Caminhão Genérico",
+        ano: new Date().getFullYear() - 2, // Ano um pouco mais antigo
+        cor: document.getElementById("corCaminhao").value || "Vermelho"
+    };
+    
+    criarVeiculo(dadosVeiculo);
 }
 
 // --- FUNÇÕES DE PREVISÃO DO TEMPO PARA VIAGEM ---
@@ -532,9 +545,8 @@ if (inputCidadeDestino) {
 
 // Event listener que executa quando o conteúdo do HTML é totalmente carregado
 window.addEventListener('DOMContentLoaded', () => {
-    console.log('DOM carregado. Inicializando garagem...');
-    // AQUI ESTÁ A CHAMADA CORRIGIDA
-    carregarGaragemDoLocalStorage();
+    console.log('DOM carregado. Buscando veículos do backend...');
+    carregarVeiculosDoBackend(); 
 
     // Seleciona o primeiro veículo da lista se nenhum estiver selecionado
     if (!veiculoSelecionado && garagemDeVeiculos.length > 0) {
@@ -555,3 +567,74 @@ window.addEventListener('DOMContentLoaded', () => {
 
     configurarFiltrosDeDias();
 });
+/**
+ * [NOVA FUNÇÃO]
+ * Busca todos os veículos do backend e atualiza a interface.
+ * Substitui a necessidade de carregar do localStorage.
+ */
+async function carregarVeiculosDoBackend() {
+    // IMPORTANTE: Certifique-se de que esta é a URL correta do seu backend no Render.
+    const backendUrl = 'https://carro-8fvo.onrender.com'; 
+    
+    const listaVeiculosDiv = document.getElementById('outputCarro'); // Usando um div para mostrar a lista
+    listaVeiculosDiv.innerHTML = '<p>Carregando veículos da garagem...</p>';
+
+    try {
+        const response = await fetch(`${backendUrl}/api/veiculos`);
+        if (!response.ok) {
+            const erro = await response.json();
+            throw new Error(erro.error || 'Não foi possível buscar os veículos.');
+        }
+        const veiculos = await response.json();
+        
+        let htmlLista = '<h4>Veículos na Garagem (Salvos no Banco de Dados):</h4><ul>';
+        if (veiculos.length === 0) {
+            htmlLista += '<li>Nenhum veículo encontrado na garagem. Adicione um!</li>';
+        } else {
+            veiculos.forEach(v => {
+                // Monta uma string com os detalhes do veículo
+                htmlLista += `<li><strong>Placa:</strong> ${v.placa} | <strong>Modelo:</strong> ${v.marca} ${v.modelo} | <strong>Ano:</strong> ${v.ano} | <strong>Cor:</strong> ${v.cor}</li>`;
+            });
+        }
+        htmlLista += '</ul>';
+        listaVeiculosDiv.innerHTML = htmlLista;
+
+    } catch (error) {
+        console.error("Erro ao carregar veículos:", error);
+        listaVeiculosDiv.innerHTML = `<p style="color:red;"><b>Erro ao carregar veículos:</b> ${error.message}</p>`;
+    }
+}
+
+/**
+ * [NOVA FUNÇÃO]
+ * Envia dados para o endpoint de criação de veículo no backend.
+ * Esta função será usada por `criarCarroEsportivo`, `criarCaminhao`, etc.
+ */
+async function criarVeiculo(dados) {
+    // IMPORTANTE: Certifique-se de que esta é a URL correta do seu backend no Render.
+    const backendUrl = 'https://carro-8fvo.onrender.com';
+    
+    try {
+        const response = await fetch(`${backendUrl}/api/veiculos`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(dados),
+        });
+
+        const resultado = await response.json();
+
+        if (!response.ok) {
+            // Se o servidor retornou um erro, ele virá no 'resultado.error'
+            throw new Error(resultado.error || `Erro do servidor: ${response.status}`);
+        }
+        
+        alert(`Veículo com placa ${resultado.placa} criado com sucesso!`);
+        await carregarVeiculosDoBackend(); // ATUALIZA A LISTA NA TELA!
+
+    } catch (error) {
+        console.error('Falha ao criar veículo:', error);
+        alert(`Erro ao criar veículo: ${error.message}`);
+    }
+}

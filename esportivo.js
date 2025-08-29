@@ -1,57 +1,82 @@
+// esportivo.js
+
 class CarroEsportivo extends Carro {
-  constructor(modelo, cor, apiId) {
-    super(modelo, cor, apiId);
+  /**
+   * @constructor
+   * Herda todas as propriedades de Carro e adiciona as específicas do esportivo.
+   */
+  constructor(marca, modelo, cor, placa, ano, apiId) {
+    // Chama o construtor da classe pai (Carro) com todos os parâmetros necessários
+    super(marca, modelo, cor, placa, ano, apiId);
+    
+    // Propriedades específicas do CarroEsportivo
+    this.tipoVeiculo = 'CarroEsportivo'; // Sobrescreve o tipo
     this.turboAtivado = false;
-    // this.historicoManutencao já é inicializado pelo construtor de Carro
   }
 
   ativarTurbo() {
     if (this.ligado) {
-      this.turboAtivado = true;
-      // No seu código original, `acelerar` não aceitava parâmetro.
-      // Vou assumir que você quer chamar o acelerar padrão da classe Carro algumas vezes,
-      // ou que você modificaria o `acelerar` da classe base ou desta para aceitar um valor.
-      // Para manter simples, vamos simular uma aceleração mais forte:
-      super.acelerar(); // Acelera uma vez
-      super.acelerar(); // Acelera mais uma vez (exemplo)
-      console.log("Turbo ativado! Aceleração aumentada.");
+      if (!this.turboAtivado) {
+        this.turboAtivado = true;
+        // Simula um ganho de performance
+        super.acelerar(); 
+        super.acelerar();
+        console.log(`Turbo ativado no ${this.modelo}! Sinta a potência!`);
+      } else {
+        console.log("O turbo já está ativado.");
+      }
     } else {
       console.log("O carro precisa estar ligado para ativar o turbo.");
     }
   }
 
   desativarTurbo() {
-    this.turboAtivado = false;
-    console.log("Turbo desativado!");
+    if (this.turboAtivado) {
+        this.turboAtivado = false;
+        console.log("Turbo desativado.");
+    } else {
+        console.log("O turbo já estava desativado.");
+    }
   }
 
+  /**
+   * Sobrescreve o método da classe pai para adicionar a informação do turbo.
+   */
   exibirInformacoes() {
     const infoBase = super.exibirInformacoes();
-    return `${infoBase}, Turbo: ${this.turboAtivado ? 'Ativado' : 'Desativado'}`;
+    return `${infoBase} | Turbo: ${this.turboAtivado ? 'Ativado' : 'Desativado'}`;
   }
 
-  // Os métodos adicionarManutencao e getHistoricoManutencaoFormatado são herdados de Carro.
-  // Se precisar de comportamento específico para CarroEsportivo, pode sobrescrevê-los.
-
-  toJSON() {
-    // Pega o JSON da classe pai e adiciona/modifica o que for específico
-    const jsonPai = super.toJSON();
-    return {
-        ...jsonPai, // Spread das propriedades do pai
-        tipoVeiculo: 'CarroEsportivo', // Sobrescreve o tipoVeiculo
-        turboAtivado: this.turboAtivado
-    };
-  }
-
+  /**
+   * [CORRIGIDO E ESSENCIAL]
+   * Método estático para recriar uma instância da classe a partir de um objeto JSON do DB.
+   * @param {object} json - O objeto com os dados do veículo vindo do backend.
+   * @returns {CarroEsportivo} Uma nova instância da classe CarroEsportivo.
+   */
   static fromJSON(json) {
     if (!json) return null;
-    const esportivo = new CarroEsportivo(json.modelo, json.cor, json.apiId);
-    esportivo.velocidade = json.velocidade;
-    esportivo.ligado = json.ligado;
-    esportivo.turboAtivado = json.turboAtivado;
+
+    const esportivo = new CarroEsportivo(
+        json.marca, 
+        json.modelo, 
+        json.cor, 
+        json.placa, 
+        json.ano, 
+        json.apiId
+    );
+    
+    // Atribui propriedades de estado
+    esportivo.velocidade = json.velocidade || 0;
+    esportivo.ligado = json.ligado || false;
+    esportivo.turboAtivado = json.turboAtivado || false;
+    
+    // Recria as instâncias de Manutencao (herdado)
     if (json.historicoManutencao && Array.isArray(json.historicoManutencao)) {
-        esportivo.historicoManutencao = json.historicoManutencao.map(mJson => Manutencao.fromJSON(mJson)).filter(m => m !== null);
+        esportivo.historicoManutencao = json.historicoManutencao
+            .map(mJson => Manutencao.fromJSON(mJson))
+            .filter(m => m !== null);
     }
+    
     return esportivo;
   }
 }

@@ -1,56 +1,88 @@
+// caminhao.js 
+
 class Caminhao extends Carro {
-  constructor(modelo, cor, capacidadeCarga, apiId) {
-    super(modelo, cor, apiId);
-    this.capacidadeCarga = capacidadeCarga;
+  /**
+   * @constructor
+   * Herda de Carro e adiciona capacidade de carga.
+   * @param {number} capacidadeCarga - A capacidade máxima de carga em kg.
+   */
+  constructor(marca, modelo, cor, placa, ano, apiId, capacidadeCarga) {
+    // Chama o construtor da classe pai (Carro)
+    super(marca, modelo, cor, placa, ano, apiId);
+    
+    // Propriedades específicas do Caminhao
+    this.tipoVeiculo = 'Caminhao'; // Sobrescreve o tipo
+    this.capacidadeCarga = capacidadeCarga || 0; // Garante um valor padrão
     this.cargaAtual = 0;
-    // this.historicoManutencao já é inicializado pelo construtor de Carro
   }
 
   carregar(peso) {
+    if (peso <= 0) {
+      console.log("O peso para carregar deve ser positivo.");
+      return;
+    }
     if (this.cargaAtual + peso <= this.capacidadeCarga) {
       this.cargaAtual += peso;
-      console.log(`Caminhão carregado. Carga atual: ${this.cargaAtual} kg`);
+      console.log(`Carga de ${peso} kg adicionada. Carga atual: ${this.cargaAtual} kg`);
     } else {
-      console.log("Carga excede a capacidade do caminhão.");
+      console.log(`Não foi possível carregar. Carga de ${peso} kg excede a capacidade máxima de ${this.capacidadeCarga} kg.`);
+      alert(`Carga excede a capacidade do caminhão!`);
     }
   }
 
   descarregar(peso) {
+    if (peso <= 0) {
+      console.log("O peso para descarregar deve ser positivo.");
+      return;
+    }
     if (this.cargaAtual - peso >= 0) {
       this.cargaAtual -= peso;
-      console.log(`Caminhão descarregado. Carga atual: ${this.cargaAtual} kg`);
+      console.log(`Carga de ${peso} kg removida. Carga atual: ${this.cargaAtual} kg`);
     } else {
-      console.log("Não é possível descarregar mais do que a carga atual.");
+      console.log(`Não é possível descarregar ${peso} kg. Carga atual é de apenas ${this.cargaAtual} kg.`);
+      alert("Não é possível descarregar mais do que a carga atual.");
     }
   }
 
+  /**
+   * Sobrescreve o método da classe pai para adicionar informações de carga.
+   */
   exibirInformacoes() {
     const infoBase = super.exibirInformacoes();
-    return `${infoBase}, Capacidade de Carga: ${this.capacidadeCarga} kg, Carga Atual: ${this.cargaAtual} kg`;
+    return `${infoBase} | Carga: ${this.cargaAtual}kg / ${this.capacidadeCarga}kg`;
   }
 
-  // Os métodos adicionarManutencao e getHistoricoManutencaoFormatado são herdados de Carro.
-
-  toJSON() {
-    const jsonPai = super.toJSON();
-    return {
-        ...jsonPai,
-        tipoVeiculo: 'Caminhao',
-        capacidadeCarga: this.capacidadeCarga,
-        cargaAtual: this.cargaAtual
-    };
-  }
-
+  /**
+   * [CORRIGIDO E ESSENCIAL]
+   * Método estático para recriar uma instância da classe a partir de um objeto JSON do DB.
+   * @param {object} json - O objeto com os dados do veículo vindo do backend.
+   * @returns {Caminhao} Uma nova instância da classe Caminhao.
+   */
   static fromJSON(json) {
     if (!json) return null;
-    const caminhao = new Caminhao(json.modelo, json.cor, json.capacidadeCarga, json.apiId);
-    caminhao.velocidade = json.velocidade;
-    caminhao.ligado = json.ligado;
-    caminhao.cargaAtual = json.cargaAtual;
-    // historicoManutencao
+
+    const caminhao = new Caminhao(
+        json.marca, 
+        json.modelo, 
+        json.cor, 
+        json.placa, 
+        json.ano, 
+        json.apiId,
+        json.capacidadeCarga // Passa a capacidade de carga
+    );
+    
+    // Atribui propriedades de estado
+    caminhao.velocidade = json.velocidade || 0;
+    caminhao.ligado = json.ligado || false;
+    caminhao.cargaAtual = json.cargaAtual || 0;
+    
+    // Recria as instâncias de Manutencao (herdado)
     if (json.historicoManutencao && Array.isArray(json.historicoManutencao)) {
-        caminhao.historicoManutencao = json.historicoManutencao.map(mJson => Manutencao.fromJSON(mJson)).filter(m => m !== null);
+        caminhao.historicoManutencao = json.historicoManutencao
+            .map(mJson => Manutencao.fromJSON(mJson))
+            .filter(m => m !== null);
     }
+    
     return caminhao;
   }
 }

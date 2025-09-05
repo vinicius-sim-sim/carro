@@ -1,5 +1,12 @@
 // script.js
 
+// --- [MELHORIA] Centralizar a URL do Backend ---
+// Use esta URL para o servidor no ar.
+const BACKEND_URL = 'https://carro-8fvo.onrender.com';
+// Para testar localmente, comente a linha acima e descomente a linha abaixo:
+// const BACKEND_URL = 'http://localhost:3001';
+
+
 // --- Constantes e Variáveis Globais ---
 let garagemDeVeiculos = []; // Array para armazenar todos os veículos INSTANCIADOS
 let veiculoSelecionado = null;
@@ -37,23 +44,21 @@ const manutencaoQuilometragemInput = document.getElementById("manutencaoQuilomet
 // ===================================================================
 
 async function carregarVeiculosDoBackend() {
-    const backendUrl = 'https://carro-8fvo.onrender.com';
-    
-    garagemDeVeiculos = []; 
+    garagemDeVeiculos = [];
     divInformacoesVeiculo.innerHTML = '<p>Carregando veículos da garagem...</p>';
 
     try {
-        const response = await fetch(`${backendUrl}/api/veiculos`);
+        const response = await fetch(`${BACKEND_URL}/api/veiculos`);
         if (!response.ok) {
             const erro = await response.json();
             throw new Error(erro.error || 'Não foi possível buscar os veículos.');
         }
         const veiculosDoDb = await response.json();
-        
+
         garagemDeVeiculos = veiculosDoDb.map(veiculoJson => {
             switch (veiculoJson.tipoVeiculo) {
                 case 'Carro':
-                    return Carro.fromJSON(veiculoJson); 
+                    return Carro.fromJSON(veiculoJson);
                 case 'CarroEsportivo':
                     return CarroEsportivo.fromJSON(veiculoJson);
                 case 'Caminhao':
@@ -65,11 +70,11 @@ async function carregarVeiculosDoBackend() {
         }).filter(v => v !== null);
 
         console.log("Garagem carregada e instanciada a partir do DB:", garagemDeVeiculos);
-        
+
         if (!veiculoSelecionado && garagemDeVeiculos.length > 0) {
             selecionarVeiculoPorInstancia(garagemDeVeiculos[0]);
         } else {
-             atualizarExibicaoGeral();
+            atualizarExibicaoGeral();
         }
 
     } catch (error) {
@@ -80,12 +85,12 @@ async function carregarVeiculosDoBackend() {
 }
 
 async function criarVeiculo(dados) {
-    const backendUrl = 'https://carro-8fvo.onrender.com';
-    
     try {
-        const response = await fetch(`${backendUrl}/api/veiculos`, {
+        const response = await fetch(`${BACKEND_URL}/api/veiculos`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json'
+            },
             body: JSON.stringify(dados),
         });
 
@@ -93,7 +98,7 @@ async function criarVeiculo(dados) {
         if (!response.ok) {
             throw new Error(resultado.error || `Erro do servidor: ${response.status}`);
         }
-        
+
         alert(`Veículo com placa ${resultado.placa} criado com sucesso!`);
         await carregarVeiculosDoBackend();
 
@@ -117,19 +122,19 @@ function atualizarExibicaoGeral() {
     }
 
     const carrosPadrao = garagemDeVeiculos.filter(v => v.tipoVeiculo === 'Carro');
-    outputCarro.innerHTML = carrosPadrao.length > 0 
-        ? `<ul>${carrosPadrao.map(c => `<li>${c.exibirInformacoes()}</li>`).join('')}</ul>`
-        : "Nenhum Carro Padrão na garagem.";
+    outputCarro.innerHTML = carrosPadrao.length > 0 ?
+        `<ul>${carrosPadrao.map(c => `<li>${c.exibirInformacoes()}</li>`).join('')}</ul>` :
+        "Nenhum Carro Padrão na garagem.";
 
     const esportivos = garagemDeVeiculos.filter(v => v.tipoVeiculo === 'CarroEsportivo');
-    outputEsportivo.innerHTML = esportivos.length > 0
-        ? `<ul>${esportivos.map(e => `<li>${e.exibirInformacoes()}</li>`).join('')}</ul>`
-        : "Nenhum Carro Esportivo na garagem.";
+    outputEsportivo.innerHTML = esportivos.length > 0 ?
+        `<ul>${esportivos.map(e => `<li>${e.exibirInformacoes()}</li>`).join('')}</ul>` :
+        "Nenhum Carro Esportivo na garagem.";
 
     const caminhoes = garagemDeVeiculos.filter(v => v.tipoVeiculo === 'Caminhao');
-    outputCaminhao.innerHTML = caminhoes.length > 0
-        ? `<ul>${caminhoes.map(c => `<li>${c.exibirInformacoes()}</li>`).join('')}</ul>`
-        : "Nenhum Caminhão na garagem.";
+    outputCaminhao.innerHTML = caminhoes.length > 0 ?
+        `<ul>${caminhoes.map(c => `<li>${c.exibirInformacoes()}</li>`).join('')}</ul>` :
+        "Nenhum Caminhão na garagem.";
 }
 
 // --- Funções `criar...` ---
@@ -209,7 +214,7 @@ function chamarInteragir(acao) {
                 if (!isNaN(peso) && peso > 0) {
                     metodo.call(veiculoSelecionado, peso);
                 } else {
-                     alert(`Por favor, insira um peso válido para ${acao}.`);
+                    alert(`Por favor, insira um peso válido para ${acao}.`);
                 }
             } else {
                 metodo.call(veiculoSelecionado);
@@ -221,7 +226,7 @@ function chamarInteragir(acao) {
         console.error(`Erro ao executar a ação '${acao}':`, error);
         alert(`Ocorreu um erro: ${error.message}`);
     }
-    atualizarExibicaoGeral(); 
+    atualizarExibicaoGeral();
 }
 
 // ------------------- [NOVAS] FUNÇÕES DE MANUTENÇÃO (COM API) -------------------
@@ -232,17 +237,16 @@ function chamarInteragir(acao) {
  */
 async function carregarManutencoes(veiculoId) {
     if (!veiculoId) return;
-    
+
     divHistoricoManutencao.innerHTML = "Buscando histórico de manutenções...";
-    const backendUrl = 'https://carro-8fvo.onrender.com';
 
     try {
-        const response = await fetch(`${backendUrl}/api/veiculos/${veiculoId}/manutencoes`);
+        const response = await fetch(`${BACKEND_URL}/api/veiculos/${veiculoId}/manutencoes`);
         if (!response.ok) {
             throw new Error('Falha ao buscar manutenções.');
         }
         const manutencoes = await response.json();
-        
+
         if (manutencoes.length === 0) {
             divHistoricoManutencao.innerHTML = "Nenhum histórico de manutenção encontrado para este veículo.";
             return;
@@ -255,7 +259,7 @@ async function carregarManutencoes(veiculoId) {
                 ${m.quilometragem ? `(${m.quilometragem} km)` : ''}
             </li>`;
         }).join('')}</ul>`;
-        
+
         divHistoricoManutencao.innerHTML = html;
 
     } catch (error) {
@@ -286,13 +290,14 @@ async function adicionarManutencao() {
         return;
     }
 
-    const backendUrl = 'https://carro-8fvo.onrender.com';
     const veiculoId = veiculoSelecionado._id;
 
     try {
-        const response = await fetch(`${backendUrl}/api/veiculos/${veiculoId}/manutencoes`, {
+        const response = await fetch(`${BACKEND_URL}/api/veiculos/${veiculoId}/manutencoes`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json'
+            },
             body: JSON.stringify(dadosFormulario),
         });
 
@@ -300,14 +305,14 @@ async function adicionarManutencao() {
         if (!response.ok) {
             throw new Error(resultado.error || `Erro do servidor: ${response.status}`);
         }
-        
+
         alert("Manutenção adicionada com sucesso!");
-        
+
         manutencaoDataInput.value = "";
         manutencaoDescricaoInput.value = "";
         manutencaoCustoInput.value = "";
         manutencaoQuilometragemInput.value = "";
-        
+
         await carregarManutencoes(veiculoId);
 
     } catch (error) {
@@ -420,8 +425,8 @@ async function buscarDadosOpenWeatherMap(cidade) {
         return null;
     }
     if (divPrevisaoContainer) divPrevisaoContainer.innerHTML = `<p style="text-align:center;">Buscando previsão para ${cidade}...</p>`;
-    const backendUrl = 'https://carro-8fvo.onrender.com';
-    const urlApi = `${backendUrl}/api/previsao/${encodeURIComponent(cidade)}`;
+
+    const urlApi = `${BACKEND_URL}/api/previsao/${encodeURIComponent(cidade)}`;
     try {
         const response = await fetch(urlApi);
         if (!response.ok) {
@@ -513,7 +518,7 @@ if (inputCidadeDestino) {
 
 window.addEventListener('DOMContentLoaded', () => {
     console.log('DOM carregado. Buscando veículos do backend...');
-    carregarVeiculosDoBackend(); 
+    carregarVeiculosDoBackend();
 
     if (typeof flatpickr !== "undefined") {
         flatpickr("#manutencaoData", {

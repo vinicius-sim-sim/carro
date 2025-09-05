@@ -7,8 +7,9 @@ import axios from 'axios';
 import cors from 'cors';
 import mongoose from 'mongoose';
 
-// ----- [NOVO] IMPORTAR O MODELO DE VEÍCULO -----
+// ----- IMPORTAR OS MODELOS -----
 import Veiculo from './models/Veiculo.js';
+import Manutencao from './models/Manutencao.js'; // <-- NOVA IMPORTAÇÃO
 
 
 // ------------------- CONFIGURAÇÃO INICIAL -------------------
@@ -68,7 +69,7 @@ app.get('/', (req, res) => {
 });
 
 
-// ----- [NOVO] ENDPOINTS DO CRUD DE VEÍCULOS -----
+// ----- ENDPOINTS DO CRUD DE VEÍCULOS -----
 
 // ENDPOINT POST /api/veiculos (CREATE)
 app.post('/api/veiculos', async (req, res) => {
@@ -105,6 +106,70 @@ app.get('/api/veiculos', async (req, res) => {
     } catch (error) {
         console.error("[Servidor] Erro ao buscar veículos:", error);
         res.status(500).json({ error: 'Erro interno ao buscar veículos.' });
+    }
+});
+
+
+// ------------------- [NOVO] ROTAS DE SUB-RECURSO: MANUTENÇÕES DE VEÍCULOS -------------------
+
+// ENDPOINT POST /api/veiculos/:veiculoId/manutencoes (CREATE)
+app.post('/api/veiculos/:veiculoId/manutencoes', async (req, res) => {
+    try {
+        const { veiculoId } = req.params;
+
+        // 1. Validar se o veículo com esse ID realmente existe
+        const veiculoExistente = await Veiculo.findById(veiculoId);
+        if (!veiculoExistente) {
+            return res.status(404).json({ error: 'Veículo não encontrado.' });
+        }
+
+        // 2. Criar o novo objeto de manutenção, combinando o body com o ID do veículo
+        const novaManutencaoData = {
+            ...req.body,
+            veiculo: veiculoId // Adiciona a referência ao veículo
+        };
+
+        // 3. Salvar a nova manutenção no banco de dados
+        const manutencaoCriada = await Manutencao.create(novaManutencaoData);
+
+        // 4. Retornar sucesso
+        console.log(`[Servidor] Manutenção criada para o veículo ${veiculoId}:`, manutencaoCriada);
+        res.status(201).json(manutencaoCriada);
+
+    } catch (error) {
+        console.error("[Servidor] Erro ao criar manutenção:", error);
+        // Lidar com erros de validação do Mongoose
+        if (error.name === 'ValidationError') {
+            const messages = Object.values(error.errors).map(val => val.message);
+            return res.status(400).json({ error: messages.join(' ') });
+        }
+        // Lidar com outros erros internos
+        res.status(500).json({ error: 'Erro interno ao criar manutenção.' });
+    }
+});
+
+
+// ENDPOINT GET /api/veiculos/:veiculoId/manutencoes (READ ALL FOR A VEHICLE)
+app.get('/api/veiculos/:veiculoId/manutencoes', async (req, res) => {
+    try {
+        const { veiculoId } = req.params;
+
+        // (Opcional, mas recomendado) Validar se o veículo existe
+        const veiculoExistente = await Veiculo.findById(veiculoId);
+        if (!veiculoExistente) {
+            return res.status(404).json({ error: 'Veículo não encontrado.' });
+        }
+
+        // Buscar todas as manutenções cujo campo 'veiculo' corresponda ao veiculoId
+        const manutencoes = await Manutencao.find({ veiculo: veiculoId })
+                                            .sort({ data: -1 }); // Ordena pela data mais recente
+
+        console.log(`[Servidor] Buscando manutenções para o veículo ${veiculoId}. Encontradas: ${manutencoes.length}`);
+        res.status(200).json(manutencoes);
+
+    } catch (error) {
+        console.error("[Servidor] Erro ao buscar manutenções:", error);
+        res.status(500).json({ error: 'Erro interno ao buscar manutenções.' });
     }
 });
 

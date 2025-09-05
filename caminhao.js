@@ -71,17 +71,12 @@ class Caminhao extends Carro {
         json.capacidadeCarga // Passa a capacidade de carga
     );
     
+    caminhao._id = json._id; // <-- ALTERAÇÃO IMPORTANTE: Armazena o ID do banco
+    
     // Atribui propriedades de estado
     caminhao.velocidade = json.velocidade || 0;
     caminhao.ligado = json.ligado || false;
     caminhao.cargaAtual = json.cargaAtual || 0;
-    
-    // Recria as instâncias de Manutencao (herdado)
-    if (json.historicoManutencao && Array.isArray(json.historicoManutencao)) {
-        caminhao.historicoManutencao = json.historicoManutencao
-            .map(mJson => Manutencao.fromJSON(mJson))
-            .filter(m => m !== null);
-    }
     
     return caminhao;
   }

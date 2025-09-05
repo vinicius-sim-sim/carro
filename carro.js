@@ -24,6 +24,7 @@ class Carro {
     this.ano = ano;
     this.apiId = apiId;
     this.tipoVeiculo = 'Carro'; // Define o tipo para lógica interna no frontend
+    this._id = null; // Propriedade para armazenar o ID do MongoDB
 
     // Propriedades de estado (controladas no frontend)
     this.velocidade = 0;
@@ -69,17 +70,10 @@ class Carro {
     }
   }
 
-  /**
-   * [MODIFICADO] Exibe informações mais completas do veículo.
-   */
   exibirInformacoes() {
     return `Veículo: ${this.marca} ${this.modelo} | Placa: ${this.placa} | Ano: ${this.ano} | Cor: ${this.cor} | Ligado: ${this.ligado ? 'Sim' : 'Não'} | Velocidade: ${this.velocidade} km/h`;
   }
 
-  /**
-   * Adiciona um novo objeto Manutencao ao histórico.
-   * @param {Manutencao} manutencaoObj - O objeto Manutencao a ser adicionado.
-   */
   adicionarManutencao(manutencaoObj) {
       if (!(manutencaoObj instanceof Manutencao)) {
           console.error("Tentativa de adicionar um objeto de manutenção inválido.", manutencaoObj);
@@ -97,41 +91,6 @@ class Carro {
       }
   }
   
-  /**
-   * Retorna o histórico de manutenção formatado para exibição.
-   */
-  getHistoricoManutencaoFormatado() {
-      if (this.historicoManutencao.length === 0) {
-          return "Nenhuma manutenção registrada.";
-      }
-      
-      const historicoOrdenado = [...this.historicoManutencao].sort((a, b) => {
-          const dataA = a.data.includes('-') ? new Date(a.data) : new Date(a.data.split('/').reverse().join('-'));
-          const dataB = b.data.includes('-') ? new Date(b.data) : new Date(b.data.split('/').reverse().join('-'));
-          return dataB - dataA;
-      });
-
-      return `<ul>${historicoOrdenado.map(m => `<li>${m.formatarManutencao()}</li>`).join('')}</ul>`;
-  }
-  
-  /**
-   * [MANTIDO] Método para serializar o objeto para JSON. Útil para debug ou futuras implementações.
-   */
-  toJSON() {
-      return {
-          tipoVeiculo: this.tipoVeiculo,
-          marca: this.marca,
-          modelo: this.modelo,
-          cor: this.cor,
-          placa: this.placa,
-          ano: this.ano,
-          velocidade: this.velocidade,
-          ligado: this.ligado,
-          apiId: this.apiId,
-          historicoManutencao: this.historicoManutencao.map(m => m.toJSON())
-      };
-  }
-
   /**
    * [CORRIGIDO E ESSENCIAL]
    * Método estático para recriar uma instância da classe Carro a partir de um objeto JSON
@@ -151,16 +110,11 @@ class Carro {
           json.apiId
       );
       
+      carro._id = json._id; // <-- ALTERAÇÃO IMPORTANTE: Armazena o ID do banco
+      
       // Atribui propriedades de estado que podem ou não vir do DB
       carro.velocidade = json.velocidade || 0;
       carro.ligado = json.ligado || false;
-      
-      // Recria as instâncias de Manutencao
-      if (json.historicoManutencao && Array.isArray(json.historicoManutencao)) {
-          carro.historicoManutencao = json.historicoManutencao
-              .map(mJson => Manutencao.fromJSON(mJson))
-              .filter(m => m !== null);
-      }
       
       return carro;
   }

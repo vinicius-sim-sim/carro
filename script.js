@@ -2,9 +2,12 @@
 
 // --- [MELHORIA] Centralizar a URL do Backend ---
 // Use esta URL para o servidor no ar.
-const BACKEND_URL = 'https://carro-8fvo.onrender.com';
+const BACKEND_URL = 'https://carro-8fvo.onrender.com'; // ESTA DEVE SER A URL DO SEU BACKEND DEPLOYADO!
 // Para testar localmente, comente a linha acima e descomente a linha abaixo:
 // const BACKEND_URL = 'http://localhost:3001';
+
+// DEBUG: Confirma qual URL do backend está sendo usada
+console.log(`[FRONTEND DEBUG] BACKEND_URL configurada para: ${BACKEND_URL}`);
 
 
 // --- Constantes e Variáveis Globais ---
@@ -51,7 +54,7 @@ async function carregarVeiculosDoBackend() {
         const response = await fetch(`${BACKEND_URL}/api/veiculos`);
         if (!response.ok) {
             const erro = await response.json();
-            throw new Error(erro.error || 'Não foi possível buscar os veículos.');
+            throw new Error(erro.error || `Erro ao buscar veículos: ${response.status} ${response.statusText}`);
         }
         const veiculosDoDb = await response.json();
 
@@ -64,21 +67,30 @@ async function carregarVeiculosDoBackend() {
                 case 'Caminhao':
                     return Caminhao.fromJSON(veiculoJson);
                 default:
-                    console.warn("Tipo de veículo desconhecido do DB:", veiculoJson);
+                    console.warn("[FRONTEND WARN] Tipo de veículo desconhecido do DB:", veiculoJson);
                     return null;
             }
         }).filter(v => v !== null);
 
-        console.log("Garagem carregada e instanciada a partir do DB:", garagemDeVeiculos);
+        console.log("[FRONTEND DEBUG] Garagem carregada e instanciada a partir do DB:", garagemDeVeiculos);
 
         if (!veiculoSelecionado && garagemDeVeiculos.length > 0) {
             selecionarVeiculoPorInstancia(garagemDeVeiculos[0]);
+        } else if (veiculoSelecionado) {
+            // Se já havia um veículo selecionado, tentar re-selecioná-lo para atualizar estado
+            const reSelected = garagemDeVeiculos.find(v => v._id === veiculoSelecionado._id);
+            if (reSelected) {
+                selecionarVeiculoPorInstancia(reSelected);
+            } else {
+                // Se o veículo selecionado anterior não existe mais, selecionar o primeiro
+                selecionarVeiculoPorInstancia(garagemDeVeiculos[0]);
+            }
         } else {
             atualizarExibicaoGeral();
         }
 
     } catch (error) {
-        console.error("Erro ao carregar veículos:", error);
+        console.error("[FRONTEND ERROR] Erro ao carregar veículos:", error);
         divInformacoesVeiculo.innerHTML = `<p style="color:red;"><b>Erro ao carregar veículos:</b> ${error.message}</p>`;
         atualizarExibicaoGeral();
     }
@@ -86,6 +98,7 @@ async function carregarVeiculosDoBackend() {
 
 async function criarVeiculo(dados) {
     try {
+        console.log("[FRONTEND DEBUG] Enviando dados para criar veículo:", dados);
         const response = await fetch(`${BACKEND_URL}/api/veiculos`, {
             method: 'POST',
             headers: {
@@ -96,14 +109,15 @@ async function criarVeiculo(dados) {
 
         const resultado = await response.json();
         if (!response.ok) {
-            throw new Error(resultado.error || `Erro do servidor: ${response.status}`);
+            throw new Error(resultado.error || `Erro do servidor: ${response.status} ${response.statusText}`);
         }
 
         alert(`Veículo com placa ${resultado.placa} criado com sucesso!`);
-        await carregarVeiculosDoBackend();
+        await carregarVeiculosDoBackend(); // Recarrega para ver o novo veículo
+        selecionarVeiculoPorInstancia(garagemDeVeiculos.find(v => v._id === resultado._id)); // Seleciona o recém-criado
 
     } catch (error) {
-        console.error('Falha ao criar veículo:', error);
+        console.error('[FRONTEND ERROR] Falha ao criar veículo:', error);
         alert(`Erro ao criar veículo: ${error.message}`);
     }
 }
@@ -114,6 +128,7 @@ function atualizarExibicaoGeral() {
         secaoManutencaoVeiculo.style.display = 'block';
         nomeVeiculoManutencao.textContent = `${veiculoSelecionado.marca} ${veiculoSelecionado.modelo}`;
         // Chamada crucial para carregar as manutenções do veículo selecionado
+        console.log(`[FRONTEND DEBUG] Carregando manutenções para o veículo ID: ${veiculoSelecionado._id}`);
         carregarManutencoes(veiculoSelecionado._id);
     } else {
         divInformacoesVeiculo.textContent = "Nenhum veículo selecionado. Crie ou selecione um.";
@@ -123,17 +138,17 @@ function atualizarExibicaoGeral() {
 
     const carrosPadrao = garagemDeVeiculos.filter(v => v.tipoVeiculo === 'Carro');
     outputCarro.innerHTML = carrosPadrao.length > 0 ?
-        `<ul>${carrosPadrao.map(c => `<li>${c.exibirInformacoes()}</li>`).join('')}</ul>` :
+        `<ul>${carrosPadrao.map(c => `<li>${c.exibirInformacoes()} <button onclick="selecionarVeiculoPorInstancia(garagemDeVeiculos.find(v => v._id === '${c._id}'))">Selecionar</button></li>`).join('')}</ul>` :
         "Nenhum Carro Padrão na garagem.";
 
     const esportivos = garagemDeVeiculos.filter(v => v.tipoVeiculo === 'CarroEsportivo');
     outputEsportivo.innerHTML = esportivos.length > 0 ?
-        `<ul>${esportivos.map(e => `<li>${e.exibirInformacoes()}</li>`).join('')}</ul>` :
+        `<ul>${esportivos.map(e => `<li>${e.exibirInformacoes()} <button onclick="selecionarVeiculoPorInstancia(garagemDeVeiculos.find(v => v._id === '${e._id}'))">Selecionar</button></li>`).join('')}</ul>` :
         "Nenhum Carro Esportivo na garagem.";
 
     const caminhoes = garagemDeVeiculos.filter(v => v.tipoVeiculo === 'Caminhao');
     outputCaminhao.innerHTML = caminhoes.length > 0 ?
-        `<ul>${caminhoes.map(c => `<li>${c.exibirInformacoes()}</li>`).join('')}</ul>` :
+        `<ul>${caminhoes.map(c => `<li>${c.exibirInformacoes()} <button onclick="selecionarVeiculoPorInstancia(garagemDeVeiculos.find(v => v._id === '${c._id}'))">Selecionar</button></li>`).join('')}</ul>` :
         "Nenhum Caminhão na garagem.";
 }
 
@@ -146,11 +161,11 @@ function criarCarroEsportivo() {
     criarVeiculo({
         placa: placa,
         marca: document.getElementById("modeloEsportivo").value || "Toyota",
-        modelo: "GR Corolla",
+        modelo: "GR Corolla", // Ajustado para ser mais específico
         ano: new Date().getFullYear(),
         cor: document.getElementById("corEsportivo").value || "Preto",
         tipoVeiculo: "CarroEsportivo",
-        apiId: "esportivo-corolla-01"
+        apiId: "esportivo-corolla-01" // Mantido como exemplo
     });
 }
 
@@ -166,7 +181,7 @@ function criarCaminhao() {
         cor: document.getElementById("corCaminhao").value || "Vermelho",
         capacidadeCarga: parseInt(document.getElementById("capacidadeCaminhao").value) || 10000,
         tipoVeiculo: "Caminhao",
-        apiId: "caminhao-volvo-01"
+        apiId: "caminhao-volvo-01" // Mantido como exemplo
     });
 }
 
@@ -187,15 +202,15 @@ function selecionarVeiculoPorTipoOuCriar(tipo) {
     }
 
     if (veiculosDoTipo.length > 0) {
-        selecionarVeiculoPorInstancia(veiculosDoTipo[veiculosDoTipo.length - 1]);
+        selecionarVeiculoPorInstancia(veiculosDoTipo[veiculosDoTipo.length - 1]); // Seleciona o mais recente
     } else {
-        alert(`Nenhum veículo do tipo '${tipo}' na garagem. Crie um primeiro!`);
+        alert(`Nenhum veículo do tipo '${tipo}' na garagem. Crie um primeiro ou use o botão específico!`);
     }
 }
 
 function selecionarVeiculoPorInstancia(instanciaVeiculo) {
     veiculoSelecionado = instanciaVeiculo;
-    console.log("Veículo selecionado:", veiculoSelecionado);
+    console.log("[FRONTEND DEBUG] Veículo selecionado:", veiculoSelecionado);
     atualizarExibicaoGeral();
 }
 
@@ -223,10 +238,10 @@ function chamarInteragir(acao) {
             alert(`Ação '${acao}' não disponível para ${veiculoSelecionado.constructor.name}.`);
         }
     } catch (error) {
-        console.error(`Erro ao executar a ação '${acao}':`, error);
+        console.error(`[FRONTEND ERROR] Erro ao executar a ação '${acao}':`, error);
         alert(`Ocorreu um erro: ${error.message}`);
     }
-    atualizarExibicaoGeral();
+    atualizarExibicaoGeral(); // Atualiza a exibição após qualquer interação
 }
 
 // ------------------- [NOVAS] FUNÇÕES DE MANUTENÇÃO (COM API) -------------------
@@ -236,16 +251,22 @@ function chamarInteragir(acao) {
  * @param {string} veiculoId - O ID do veículo no MongoDB.
  */
 async function carregarManutencoes(veiculoId) {
-    if (!veiculoId) return;
+    if (!veiculoId) {
+        divHistoricoManutencao.innerHTML = "<p>ID do veículo não disponível para carregar manutenções.</p>";
+        console.warn("[FRONTEND WARN] carregarManutencoes: veiculoId é nulo ou indefinido.");
+        return;
+    }
 
     divHistoricoManutencao.innerHTML = "Buscando histórico de manutenções...";
 
     try {
         const response = await fetch(`${BACKEND_URL}/api/veiculos/${veiculoId}/manutencoes`);
         if (!response.ok) {
-            throw new Error('Falha ao buscar manutenções.');
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || `Falha ao buscar manutenções: ${response.status} ${response.statusText}`);
         }
         const manutencoes = await response.json();
+        console.log(`[FRONTEND DEBUG] Manutenções carregadas para o veículo ${veiculoId}:`, manutencoes);
 
         if (manutencoes.length === 0) {
             divHistoricoManutencao.innerHTML = "Nenhum histórico de manutenção encontrado para este veículo.";
@@ -253,9 +274,11 @@ async function carregarManutencoes(veiculoId) {
         }
 
         const html = `<ul>${manutencoes.map(m => {
-            const dataFormatada = new Date(m.data).toLocaleDateString('pt-BR', {timeZone: 'UTC'});
+            // Garante que 'm.data' seja um formato de data válido para Date()
+            const dataObj = new Date(m.data);
+            const dataFormatada = dataObj.toLocaleDateString('pt-BR', {timeZone: 'UTC'}); // Assegura formato brasileiro
             return `<li>
-                <strong>${dataFormatada}</strong>: ${m.descricaoServico} - R$${m.custo.toFixed(2)}
+                <strong>${dataFormatada}</strong>: ${m.descricaoServico} - R$${parseFloat(m.custo).toFixed(2)}
                 ${m.quilometragem ? `(${m.quilometragem} km)` : ''}
             </li>`;
         }).join('')}</ul>`;
@@ -263,8 +286,8 @@ async function carregarManutencoes(veiculoId) {
         divHistoricoManutencao.innerHTML = html;
 
     } catch (error) {
-        console.error("Erro ao carregar manutenções:", error);
-        divHistoricoManutencao.innerHTML = `<p style="color:red;">Erro ao carregar o histórico.</p>`;
+        console.error("[FRONTEND ERROR] Erro ao carregar manutenções:", error);
+        divHistoricoManutencao.innerHTML = `<p style="color:red;">Erro ao carregar o histórico: ${error.message}</p>`;
     }
 }
 
@@ -275,6 +298,7 @@ async function carregarManutencoes(veiculoId) {
 async function adicionarManutencao() {
     if (!veiculoSelecionado || !veiculoSelecionado._id) {
         alert("Selecione um veículo para adicionar uma manutenção.");
+        console.warn("[FRONTEND WARN] Tentativa de adicionar manutenção sem veículo selecionado ou ID.");
         return;
     }
 
@@ -282,15 +306,18 @@ async function adicionarManutencao() {
         data: manutencaoDataInput.value,
         descricaoServico: manutencaoDescricaoInput.value.trim(),
         custo: parseFloat(manutencaoCustoInput.value),
+        // Adiciona quilometragem apenas se o valor for preenchido e for um número válido
         quilometragem: manutencaoQuilometragemInput.value ? parseInt(manutencaoQuilometragemInput.value) : undefined
     };
 
-    if (!dadosFormulario.data || !dadosFormulario.descricaoServico || isNaN(dadosFormulario.custo)) {
-        alert("Por favor, preencha Data, Descrição e Custo.");
+    // Validação básica no frontend antes de enviar
+    if (!dadosFormulario.data || dadosFormulario.descricaoServico === "" || isNaN(dadosFormulario.custo) || dadosFormulario.custo < 0) {
+        alert("Por favor, preencha a Data, a Descrição do Serviço e um Custo válido (não negativo).");
         return;
     }
 
     const veiculoId = veiculoSelecionado._id;
+    console.log("[FRONTEND DEBUG] Enviando nova manutenção para veículo:", veiculoId, "com dados:", dadosFormulario);
 
     try {
         const response = await fetch(`${BACKEND_URL}/api/veiculos/${veiculoId}/manutencoes`, {
@@ -303,20 +330,20 @@ async function adicionarManutencao() {
 
         const resultado = await response.json();
         if (!response.ok) {
-            throw new Error(resultado.error || `Erro do servidor: ${response.status}`);
+            throw new Error(resultado.error || `Erro do servidor ao adicionar manutenção: ${response.status} ${response.statusText}`);
         }
 
         alert("Manutenção adicionada com sucesso!");
 
+        // Limpa os campos do formulário
         manutencaoDataInput.value = "";
         manutencaoDescricaoInput.value = "";
         manutencaoCustoInput.value = "";
         manutencaoQuilometragemInput.value = "";
 
-        await carregarManutencoes(veiculoId);
-
+        await carregarManutencoes(veiculoId); // Recarrega o histórico após adicionar
     } catch (error) {
-        console.error('Falha ao adicionar manutenção:', error);
+        console.error('[FRONTEND ERROR] Falha ao adicionar manutenção:', error);
         alert(`Erro ao salvar manutenção: ${error.message}`);
     }
 }
@@ -326,11 +353,16 @@ async function adicionarManutencao() {
 async function buscarDetalhesVeiculoAPI(identificadorVeiculo) {
     try {
         const response = await fetch('./dados_veiculos_api.json');
-        if (!response.ok) return null;
+        if (!response.ok) {
+            console.error(`[FRONTEND ERROR] Falha ao carregar dados_veiculos_api.json: ${response.status}`);
+            return null;
+        }
         const todosVeiculosAPI = await response.json();
-        return todosVeiculosAPI.find(veiculo => veiculo.id === identificadorVeiculo) || null;
+        const detalhes = todosVeiculosAPI.find(veiculo => veiculo.id === identificadorVeiculo);
+        console.log(`[FRONTEND DEBUG] Detalhes API local para ${identificadorVeiculo}:`, detalhes);
+        return detalhes || null;
     } catch (error) {
-        console.error("Falha ao buscar dados da API local de veículos:", error);
+        console.error("[FRONTEND ERROR] Falha ao buscar dados da API local de veículos:", error);
         return null;
     }
 }
@@ -343,10 +375,14 @@ function formatarDataPrevisao(dataObj) {
 }
 
 function processarDadosPrevisao(dadosApi) {
-    if (!dadosApi || !dadosApi.list) return null;
+    if (!dadosApi || !dadosApi.list) {
+        console.warn("[FRONTEND WARN] processarDadosPrevisao: dadosApi ou dadosApi.list são nulos/indefinidos.");
+        return null;
+    }
     const previsoesDiarias = {};
     dadosApi.list.forEach(item => {
         const data = new Date(item.dt * 1000);
+        // Garante que a chave do dia seja baseada na data local, ou GMT para consistência
         const diaChave = data.toISOString().split('T')[0];
 
         if (!previsoesDiarias[diaChave]) {
@@ -370,11 +406,16 @@ function processarDadosPrevisao(dadosApi) {
             icone: item.weather[0].icon
         });
     });
+    // Converte Set para Array para facilitar a exibição
+    Object.values(previsoesDiarias).forEach(dia => {
+        dia.descricoes = Array.from(dia.descricoes);
+        dia.icones = Array.from(dia.icones);
+    });
     return Object.values(previsoesDiarias);
 }
 
 function exibirPrevisaoTempo(previsoesDiariasProcessadas, numDiasParaExibir) {
-    const cidade = previsoesCidadeCache ? previsoesCidadeCache[0].cidadeNome : "a cidade selecionada";
+    const cidade = previsoesCidadeCache && previsoesCidadeCache.length > 0 ? previsoesCidadeCache[0].cidadeNome : "a cidade selecionada";
     if (!previsoesDiariasProcessadas || previsoesDiariasProcessadas.length === 0) {
         divPrevisaoContainer.innerHTML = `<p>Não foi possível obter a previsão para ${cidade}.</p>`;
         return;
@@ -383,11 +424,11 @@ function exibirPrevisaoTempo(previsoesDiariasProcessadas, numDiasParaExibir) {
     const previsoesFiltradas = previsoesDiariasProcessadas.slice(0, numDiasParaExibir);
     let html = '';
     previsoesFiltradas.forEach((dia, index) => {
-        const descricaoPrincipal = [...dia.descricoes].join(', ');
-        const iconePrincipal = `${[...dia.icones][0]}d`;
+        const descricaoPrincipal = dia.descricoes.join(', ');
+        const iconePrincipal = `${dia.icones[0]}d`; // Pega o primeiro ícone, adiciona 'd' para dia
         let detalhesHtml = `<h5>Detalhes por horário:</h5><ul>`;
         dia.horarios.forEach(h => {
-            detalhesHtml += `<li><strong>${h.hora}:</strong> ${h.temp.toFixed(1)}°C, ${h.descricao}</li>`;
+            detalhesHtml += `<li><strong>${h.hora}:</strong> ${h.temp.toFixed(1)}°C, ${h.descricao} <img src="http://openweathermap.org/img/wn/${h.icone}.png" alt="${h.descricao}" style="width:25px; height:25px; vertical-align: middle;"></li>`;
         });
         detalhesHtml += `</ul>`;
 
@@ -406,7 +447,7 @@ function exibirPrevisaoTempo(previsoesDiariasProcessadas, numDiasParaExibir) {
                         <p class="temp-min">${dia.temp_min.toFixed(1)}°C</p>
                     </div>
                 </div>
-                <div class="detalhes-horarios">${detalhesHtml}</div>
+                <div class="detalhes-horarios" style="display: none;">${detalhesHtml}</div> <!-- Detalhes ocultos por padrão -->
             </div>`;
     });
     divPrevisaoContainer.innerHTML = html;
@@ -427,6 +468,7 @@ async function buscarDadosOpenWeatherMap(cidade) {
     if (divPrevisaoContainer) divPrevisaoContainer.innerHTML = `<p style="text-align:center;">Buscando previsão para ${cidade}...</p>`;
 
     const urlApi = `${BACKEND_URL}/api/previsao/${encodeURIComponent(cidade)}`;
+    console.log(`[FRONTEND DEBUG] Chamando API de previsão em: ${urlApi}`);
     try {
         const response = await fetch(urlApi);
         if (!response.ok) {
@@ -434,9 +476,10 @@ async function buscarDadosOpenWeatherMap(cidade) {
             throw new Error(errorData.error || `Erro ${response.status} ao contatar o servidor.`);
         }
         const data = await response.json();
+        console.log(`[FRONTEND DEBUG] Resposta da API de previsão para ${cidade}:`, data);
         return data;
     } catch (error) {
-        console.error("[Frontend] Erro ao buscar previsão no backend:", error);
+        console.error("[FRONTEND ERROR] Erro ao buscar previsão no backend:", error);
         if (divPrevisaoContainer) divPrevisaoContainer.innerHTML = `<p style='color:red; text-align:center;'>Falha ao buscar previsão: ${error.message}</p>`;
         return null;
     }
@@ -478,6 +521,7 @@ function configurarFiltrosDeDias() {
 
 // --- EVENT LISTENERS E INICIALIZAÇÃO ---
 
+// Adiciona botões de seleção individual para cada veículo listado
 document.getElementById("selectCarroBtn").addEventListener("click", () => selecionarVeiculoPorTipoOuCriar('carro'));
 document.getElementById("selectEsportivoBtn").addEventListener("click", () => selecionarVeiculoPorTipoOuCriar('esportivo'));
 document.getElementById("selectCaminhaoBtn").addEventListener("click", () => selecionarVeiculoPorTipoOuCriar('caminhao'));
@@ -486,6 +530,7 @@ btnAdicionarManutencao.addEventListener("click", adicionarManutencao); // <-- AT
 btnBuscarDetalhes.addEventListener('click', async () => {
     if (!veiculoSelecionado || !veiculoSelecionado.apiId) {
         divDetalhesExtrasOutput.innerHTML = "Selecione um veículo para ver seus detalhes.";
+        console.warn("[FRONTEND WARN] Tentativa de buscar detalhes extras sem veículo selecionado ou apiId.");
         return;
     }
     divDetalhesExtrasOutput.innerHTML = `Buscando dados para ID: ${veiculoSelecionado.apiId}...`;
@@ -517,7 +562,7 @@ if (inputCidadeDestino) {
 }
 
 window.addEventListener('DOMContentLoaded', () => {
-    console.log('DOM carregado. Buscando veículos do backend...');
+    console.log('[FRONTEND INFO] DOM carregado. Buscando veículos do backend...');
     carregarVeiculosDoBackend();
 
     if (typeof flatpickr !== "undefined") {

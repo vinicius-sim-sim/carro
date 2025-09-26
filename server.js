@@ -1,65 +1,60 @@
-// server.js
-
 // ------------------- IMPORTAÇÕES -------------------
 import express from 'express';
 import dotenv from 'dotenv';
 import axios from 'axios';
 import cors from 'cors';
 import mongoose from 'mongoose';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 
 // ----- IMPORTAR OS MODELOS -----
 import Veiculo from './models/Veiculo.js';
-import Manutencao from './models/Manutencao.js'; // Garante que estamos importando o arquivo com "M" maiúsculo.
+import Manutencao from './models/Manutencao.js';
+import User from './models/User.js';
+
+// ----- IMPORTAR O MIDDLEWARE -----
+import authMiddleware from './middleware/auth.js';
 
 
 // ------------------- CONFIGURAÇÃO INICIAL -------------------
-dotenv.config(); // Carrega as variáveis do arquivo .env
+dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 3001;
 
 // Middlewares
-// Lista de origens permitidas
-// ATENÇÃO: Adicione aqui TODAS as URLs onde seu frontend estará hospedado.
-// Se você mudar o domínio do Vercel, precisa atualizar aqui.
 const allowedOrigins = [
-  'https://carro-chi.vercel.app', // Seu frontend no Vercel (EXEMPLO)
-  'http://127.0.0.1:5500',      // Seu ambiente de desenvolvimento local
-  'http://localhost:5500',        // Outra variação comum do ambiente local
-  'http://localhost:3000'         // Se usar create-react-app ou similar
+  'https://carro-chi.vercel.app',
+  'http://127.0.0.1:5500',
+  'http://localhost:5500',
+  'http://localhost:3000'
 ];
 
-// Configuração do CORS
 app.use(cors({
   origin: function (origin, callback) {
-    // Permite requisições sem 'origin' (ex: de ferramentas como Postman ou requisições do mesmo servidor)
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.indexOf(origin) === -1) {
-      const msg = `A política de CORS para este site não permite acesso da origem especificada: ${origin}.`;
-      console.error("[CORS Error] " + msg); // Log detalhado do erro de CORS
-      return callback(new Error(msg), false);
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Origem não permitida pelo CORS'));
     }
-    console.log(`[CORS] Requisição da origem ${origin} permitida.`); // Log para sucesso de CORS
-    return callback(null, true);
   }
 }));
 app.use(express.json());
+
 
 // ------------------- CONEXÃO COM O MONGODB ATLAS -------------------
 const mongoUri = process.env.MONGO_URI_CRUD;
 
 async function connectDatabase() {
   if (!mongoUri) {
-    console.error("ERRO FATAL: A variável de ambiente MONGO_URI_CRUD não foi definida. Verifique seu arquivo .env ou as configurações de ambiente no Render/Vercel.");
+    console.error("ERRO FATAL: A variável de ambiente MONGO_URI_CRUD não foi definida.");
     process.exit(1);
   }
   try {
     await mongoose.connect(mongoUri);
     console.log("🚀 Conectado com sucesso ao MongoDB Atlas via Mongoose!");
-    mongoose.connection.on('error', (err) => console.error("❌ Erro de conexão do Mongoose:", err));
-    mongoose.connection.on('disconnected', () => console.warn("⚠️ Mongoose desconectado."));
   } catch (error) {
-    console.error("❌ ERRO FATAL ao tentar conectar ao MongoDB:", error.message, error); // Log do objeto de erro completo
+    console.error("❌ ERRO FATAL ao tentar conectar ao MongoDB:", error.message);
     process.exit(1);
   }
 }
@@ -70,98 +65,148 @@ app.get('/', (req, res) => {
   res.send('API da Garagem Inteligente está no ar!');
 });
 
-// ----- ENDPOINTS DO CRUD DE VEÍCULOS -----
+// =================== [NOVAS] ROTAS DE AUTENTICAÇÃO ===================
 
-app.post('/api/veiculos', async (req, res) => {
+// ROTA DE REGISTRO
+app.post('/api/auth/register', async (req, res) => {
     try {
-        const novoVeiculoData = req.body;
-        console.log('[DEBUG] Recebido POST para /api/veiculos com dados:', novoVeiculoData); // Log dos dados recebidos
+        const { email, password } = req.body;
+
+        if (!email || !password) {
+            return res.status(400).json({ error: 'E-mail e senha são obrigatórios.' });
+        }
+
+        const existingUser = await User.findOne({ email });
+        if (existingUser) {
+            return res.status(400).json({ error: 'Este e-mail já está em uso.' });
+        }
+
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+
+        const user = new User({ email, password: hashedPassword });
+        await user.save();
+
+        res.status(201).json({ message: 'Usuário registrado com sucesso!' });
+
+    } catch (error) {
+        console.error("[ERROR] Erro no registro:", error);
+        res.status(500).json({ error: 'Erro interno no servidor.' });
+    }
+});
+
+
+// ROTA DE LOGIN
+app.post('/api/auth/login', async (req, res) => {
+    try {
+        const { email, password } = req.body;
+
+        if (!email || !password) {
+            return res.status(400).json({ error: 'E-mail e senha são obrigatórios.' });
+        }
+
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(400).json({ error: 'Credenciais inválidas.' });
+        }
+
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
+            return res.status(400).json({ error: 'Credenciais inválidas.' });
+        }
+
+        const token = jwt.sign(
+            { userId: user._id },
+            process.env.JWT_SECRET,
+            { expiresIn: '1h' }
+        );
+        
+        res.status(200).json({ token, user: { email: user.email } }); // Retorna o token e o e-mail
+
+    } catch (error) {
+        console.error("[ERROR] Erro no login:", error);
+        res.status(500).json({ error: 'Erro interno no servidor.' });
+    }
+});
+
+
+// =================== ROTAS DE VEÍCULOS (AGORA PROTEGIDAS) ===================
+
+app.post('/api/veiculos', authMiddleware, async (req, res) => {
+    try {
+        const novoVeiculoData = { ...req.body, owner: req.userId };
         const veiculoCriado = await Veiculo.create(novoVeiculoData);
-        console.log('[DEBUG] Veículo criado com sucesso:', veiculoCriado);
         res.status(201).json(veiculoCriado);
     } catch (error) {
-        console.error("[ERROR] Erro ao criar veículo:", error); // Log do objeto de erro completo
         if (error.code === 11000) {
-            return res.status(409).json({ error: `Veículo com a placa '${error.keyValue.placa}' já existe. Por favor, use uma placa diferente.` });
-        }
-        if (error.name === 'ValidationError') {
-             const messages = Object.values(error.errors).map(val => val.message);
-             return res.status(400).json({ error: `Erro de validação: ${messages.join(' ')}` });
+            return res.status(409).json({ error: `Veículo com a placa '${error.keyValue.placa}' já existe.` });
         }
         res.status(500).json({ error: 'Erro interno ao criar veículo.' });
     }
 });
 
-app.get('/api/veiculos', async (req, res) => {
+app.get('/api/veiculos', authMiddleware, async (req, res) => {
     try {
-        const todosOsVeiculos = await Veiculo.find();
-        console.log(`[DEBUG] Buscando todos os veículos do DB. Encontrados: ${todosOsVeiculos.length} veículos.`);
-        res.json(todosOsVeiculos);
+        const veiculosDoUsuario = await Veiculo.find({ owner: req.userId });
+        res.json(veiculosDoUsuario);
     } catch (error) {
-        console.error("[ERROR] Erro ao buscar veículos:", error); // Log do objeto de erro completo
         res.status(500).json({ error: 'Erro interno ao buscar veículos.' });
     }
 });
 
-// ------------------- ROTAS DE SUB-RECURSO: MANUTENÇÕES DE VEÍCULOS -------------------
 
-app.post('/api/veiculos/:veiculoId/manutencoes', async (req, res) => {
+// =================== ROTAS DE MANUTENÇÃO (AGORA PROTEGIDAS) ===================
+
+app.post('/api/veiculos/:veiculoId/manutencoes', authMiddleware, async (req, res) => {
     try {
         const { veiculoId } = req.params;
-        const veiculoExistente = await Veiculo.findById(veiculoId);
-        if (!veiculoExistente) {
-            console.warn(`[WARN] Tentativa de adicionar manutenção a veículo não encontrado: ${veiculoId}`);
-            return res.status(404).json({ error: 'Veículo não encontrado.' });
+        const veiculo = await Veiculo.findOne({ _id: veiculoId, owner: req.userId });
+
+        if (!veiculo) {
+            return res.status(404).json({ error: 'Veículo não encontrado ou não pertence a você.' });
         }
+        
         const novaManutencaoData = { ...req.body, veiculo: veiculoId };
-        console.log(`[DEBUG] Recebido POST para manutenção do veículo ${veiculoId} com dados:`, novaManutencaoData); // Log dos dados recebidos
         const manutencaoCriada = await Manutencao.create(novaManutencaoData);
-        console.log(`[DEBUG] Manutenção criada para o veículo ${veiculoId}:`, manutencaoCriada);
         res.status(201).json(manutencaoCriada);
+
     } catch (error) {
-        console.error("[ERROR] Erro ao criar manutenção:", error); // Log do objeto de erro completo
-        if (error.name === 'ValidationError') {
-            const messages = Object.values(error.errors).map(val => val.message);
-            return res.status(400).json({ error: `Erro de validação na manutenção: ${messages.join(' ')}` });
-        }
         res.status(500).json({ error: 'Erro interno ao criar manutenção.' });
     }
 });
 
-app.get('/api/veiculos/:veiculoId/manutencoes', async (req, res) => {
+app.get('/api/veiculos/:veiculoId/manutencoes', authMiddleware, async (req, res) => {
     try {
         const { veiculoId } = req.params;
-        const veiculoExistente = await Veiculo.findById(veiculoId);
-        if (!veiculoExistente) {
-            console.warn(`[WARN] Tentativa de buscar manutenção para veículo não encontrado: ${veiculoId}`);
-            return res.status(404).json({ error: 'Veículo não encontrado.' });
+        const veiculo = await Veiculo.findOne({ _id: veiculoId, owner: req.userId });
+
+        if (!veiculo) {
+            return res.status(404).json({ error: 'Veículo não encontrado ou não pertence a você.' });
         }
+
         const manutencoes = await Manutencao.find({ veiculo: veiculoId }).sort({ data: -1 });
-        console.log(`[DEBUG] Buscando manutenções para o veículo ${veiculoId}. Encontradas: ${manutencoes.length}.`);
         res.status(200).json(manutencoes);
-    } catch (error) {
-        console.error("[ERROR] Erro ao buscar manutenções:", error); // Log do objeto de erro completo
+    } catch (error)
+    {
         res.status(500).json({ error: 'Erro interno ao buscar manutenções.' });
     }
 });
 
-// ------------------- Rota para previsão do tempo (EXISTENTE) -------------------
+
+// ------------------- Rota para previsão do tempo (PÚBLICA) -------------------
 app.get('/api/previsao/:cidade', async (req, res) => {
   const { cidade } = req.params;
   const apiKey = process.env.OPENWEATHER_API_KEY;
   if (!apiKey) {
-    console.error("ERRO: OPENWEATHER_API_KEY não configurada no servidor."); // Log de erro se a chave estiver ausente
-    return res.status(500).json({ error: 'Chave da API de clima não configurada no servidor.' });
+    return res.status(500).json({ error: 'Chave da API de clima não configurada.' });
   }
   const weatherAPIUrl = `https://api.openweathermap.org/data/2.5/forecast?q=${cidade}&appid=${apiKey}&units=metric&lang=pt_br`;
-  console.log(`[DEBUG] Buscando previsão para cidade: ${cidade} na URL: ${weatherAPIUrl}`); // Log da URL da API
   try {
     const response = await axios.get(weatherAPIUrl);
     res.json(response.data);
   } catch (error) {
-    console.error(`[ERROR] Erro ao buscar previsão para ${cidade}:`, error.message, error.response?.data); // Log de erro detalhado da API externa
     const status = error.response?.status || 500;
-    const message = error.response?.data?.message || 'Erro ao buscar previsão do tempo.';
+    const message = error.response?.data?.message || 'Erro ao buscar previsão.';
     res.status(status).json({ error: message });
   }
 });
@@ -171,8 +216,8 @@ async function startServer() {
   await connectDatabase();
   app.listen(port, () => {
     console.log(`✅ Servidor rodando na porta: ${port}`);
-    if (!process.env.OPENWEATHER_API_KEY) {
-      console.warn("-> ATENÇÃO: OPENWEATHER_API_KEY não foi encontrada no .env. A previsão do tempo pode não funcionar.");
+    if (!process.env.JWT_SECRET) {
+      console.warn("-> ATENÇÃO: JWT_SECRET não foi encontrada no .env. A autenticação NÃO funcionará.");
     }
   });
 }

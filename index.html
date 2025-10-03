@@ -94,9 +94,6 @@
         <div class="garagem-controle">
             <h2>Controle da Garagem</h2>
             <p>Selecione ou crie um veículo para interagir:</p>
-            <button id="selectCarroBtn">Selecionar Último Carro</button>
-            <button id="selectEsportivoBtn">Selecionar Último Esportivo</button>
-            <button id="selectCaminhaoBtn">Selecionar Último Caminhão</button>
 
             <h3>Veículo Selecionado:</h3>
             <div id="informacoesVeiculo" class="output info-central">
@@ -119,6 +116,19 @@
             <input type="number" id="pesoInteracao" value="100" style="width: 80px;">
             <button onclick="chamarInteragir('carregar')">Carregar</button>
             <button onclick="chamarInteragir('descarregar')">Descarregar</button>
+        </div>
+
+        <div id="secaoPrevisaoViagem">
+            <h2>Previsão do Tempo para Viagem</h2>
+            <p>Planeje sua viagem consultando o clima no seu destino.</p>
+            <div class="previsao-input-group">
+                <label for="cidadeDestino">Destino:</label>
+                <input type="text" id="cidadeDestino" placeholder="Digite o nome da cidade">
+                <button id="buscarPrevisaoBtn">Buscar Clima</button>
+            </div>
+            <div id="outputPrevisao" class="output-previsao">
+                Aguardando a busca por uma cidade...
+            </div>
         </div>
         
         <hr>

@@ -210,7 +210,7 @@ function chamarInteragir(acao) {
     }
     try {
         if (typeof veiculoSelecionado[acao] === 'function') {
-            if (acao === 'carregar' || aco === 'descarregar') {
+            if (acao === 'carregar' || acao === 'descarregar') {
                 const peso = parseInt(document.getElementById("pesoInteracao").value, 10);
                 if (isNaN(peso) || peso <= 0) return alert("Por favor, insira um peso válido.");
                 veiculoSelecionado[acao](peso);
@@ -268,4 +268,102 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('[FRONTEND INFO] Página carregada. Verificando estado de autenticação...');
     console.log(`[FRONTEND DEBUG] BACKEND_URL configurada para: ${BACKEND_URL}`);
     updateUIForAuthState();
+});
+
+// ===================================================================
+// LÓGICA DA PREVISÃO DO TEMPO
+// ===================================================================
+
+const cidadeInput = document.getElementById('cidadeDestino');
+const buscarPrevisaoBtn = document.getElementById('buscarPrevisaoBtn');
+const outputPrevisao = document.getElementById('outputPrevisao');
+
+async function buscarEExibirPrevisao() {
+    const cidade = cidadeInput.value.trim();
+    if (!cidade) {
+        alert("Por favor, digite o nome de uma cidade.");
+        return;
+    }
+
+    outputPrevisao.innerHTML = `<p>Buscando previsão para ${cidade}...</p>`;
+
+    try {
+        const response = await fetch(`${BACKEND_URL}/api/previsao/${cidade}`);
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error || 'Cidade não encontrada.');
+        }
+
+        exibirPrevisaoFormatada(data);
+
+    } catch (error) {
+        outputPrevisao.innerHTML = `<p style="color: red;"><b>Erro:</b> ${error.message}</p>`;
+    }
+}
+
+function exibirPrevisaoFormatada(data) {
+    outputPrevisao.innerHTML = `<h3>Previsão para ${data.city.name}</h3>`;
+
+    const previsoesDiarias = {};
+
+    // Agrupa as previsões de 3 em 3 horas por dia
+    data.list.forEach(previsao => {
+        const dataObj = new Date(previsao.dt * 1000);
+        const dia = dataObj.toISOString().split('T')[0]; // Pega a data no formato YYYY-MM-DD
+
+        if (!previsoesDiarias[dia]) {
+            previsoesDiarias[dia] = {
+                temps: [],
+                descs: {},
+                icons: {},
+                diaSemana: dataObj.toLocaleDateString('pt-BR', { weekday: 'long' }),
+                dataFmt: dataObj.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
+            };
+        }
+        previsoesDiarias[dia].temps.push(previsao.main.temp);
+        
+        // Contagem para achar a descrição e ícone mais comuns do dia
+        const desc = previsao.weather[0].description;
+        const icon = previsao.weather[0].icon;
+        previsoesDiarias[dia].descs[desc] = (previsoesDiarias[dia].descs[desc] || 0) + 1;
+        previsoesDiarias[dia].icons[icon] = (previsoesDiarias[dia].icons[icon] || 0) + 1;
+    });
+
+    // Gera o HTML para cada dia
+    for (const dia in previsoesDiarias) {
+        const diaInfo = previsoesDiarias[dia];
+        const temp_min = Math.min(...diaInfo.temps).toFixed(0);
+        const temp_max = Math.max(...diaInfo.temps).toFixed(0);
+
+        // Pega a descrição e ícone mais frequente do dia
+        const descPrincipal = Object.keys(diaInfo.descs).reduce((a, b) => diaInfo.descs[a] > diaInfo.descs[b] ? a : b);
+        const iconPrincipal = Object.keys(diaInfo.icons).reduce((a, b) => diaInfo.icons[a] > diaInfo.icons[b] ? a : b);
+
+        outputPrevisao.innerHTML += `
+            <div class="previsao-dia-card">
+                <div class="sumario">
+                    <div class="info-principal">
+                        <img src="https://openweathermap.org/img/wn/${iconPrincipal}@2x.png" alt="Ícone do tempo">
+                        <div>
+                            <h4>${diaInfo.diaSemana}, ${diaInfo.dataFmt}</h4>
+                            <p>${descPrincipal}</p>
+                        </div>
+                    </div>
+                    <div class="temperaturas">
+                        <span class="temp-max">Máx: ${temp_max}°C</span><br>
+                        <span class="temp-min">Mín: ${temp_min}°C</span>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+}
+
+// Adiciona o listener para o botão e para a tecla "Enter" no input
+buscarPrevisaoBtn.addEventListener('click', buscarEExibirPrevisao);
+cidadeInput.addEventListener('keyup', (event) => {
+    if (event.key === "Enter") {
+        buscarEExibirPrevisao();
+    }
 });

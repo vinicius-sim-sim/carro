@@ -52,7 +52,7 @@ class Caminhao extends Carro {
     return `${infoBase} | Carga: ${this.cargaAtual}kg / ${this.capacidadeCarga}kg`;
   }
 
-  /**
+/**
    * [CORRIGIDO E ESSENCIAL]
    * Método estático para recriar uma instância da classe a partir de um objeto JSON do DB.
    * @param {object} json - O objeto com os dados do veículo vindo do backend.
@@ -68,15 +68,19 @@ class Caminhao extends Carro {
         json.placa, 
         json.ano, 
         json.apiId,
-        json.capacidadeCarga // Passa a capacidade de carga
+        json.capacidadeCarga
     );
     
-    caminhao._id = json._id; // <-- ALTERAÇÃO IMPORTANTE: Armazena o ID do banco
+    caminhao._id = json._id;
     
     // Atribui propriedades de estado
     caminhao.velocidade = json.velocidade || 0;
     caminhao.ligado = json.ligado || false;
     caminhao.cargaAtual = json.cargaAtual || 0;
+    
+    // ===== LINHA ADICIONADA AQUI =====
+    caminhao.owner = json.owner;
+    // ===================================
     
     return caminhao;
   }

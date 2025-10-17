@@ -1,4 +1,5 @@
 // models/Veiculo.js
+
 import mongoose from 'mongoose';
 
 const veiculoSchema = new mongoose.Schema({
@@ -25,12 +26,16 @@ const veiculoSchema = new mongoose.Schema({
     },
     apiId: { type: String },
     capacidadeCarga: { type: Number, default: 0 },
-    // --- CAMPO ADICIONADO ---
     owner: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User', // Referência ao modelo 'User'
+        ref: 'User',
         required: true
-    }
+    },
+    // --- CAMPO ADICIONADO ---
+    sharedWith: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User' // Um array de referências para outros usuários
+    }]
 }, {
     timestamps: true
 });

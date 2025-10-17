@@ -91,7 +91,7 @@ class Carro {
       }
   }
   
-  /**
+    /**
    * [CORRIGIDO E ESSENCIAL]
    * Método estático para recriar uma instância da classe Carro a partir de um objeto JSON
    * vindo do banco de dados.
@@ -110,11 +110,15 @@ class Carro {
           json.apiId
       );
       
-      carro._id = json._id; // <-- ALTERAÇÃO IMPORTANTE: Armazena o ID do banco
+      carro._id = json._id;
       
       // Atribui propriedades de estado que podem ou não vir do DB
       carro.velocidade = json.velocidade || 0;
       carro.ligado = json.ligado || false;
+      
+      // ===== LINHA ADICIONADA AQUI =====
+      carro.owner = json.owner; 
+      // ===================================
       
       return carro;
   }

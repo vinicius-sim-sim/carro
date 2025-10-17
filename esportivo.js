@@ -65,12 +65,16 @@ class CarroEsportivo extends Carro {
         json.apiId
     );
     
-    esportivo._id = json._id; // <-- ALTERAÇÃO IMPORTANTE: Armazena o ID do banco
+    esportivo._id = json._id;
 
     // Atribui propriedades de estado
     esportivo.velocidade = json.velocidade || 0;
     esportivo.ligado = json.ligado || false;
     esportivo.turboAtivado = json.turboAtivado || false;
+    
+    // ===== LINHA ADICIONADA AQUI =====
+    esportivo.owner = json.owner;
+    // ===================================
     
     return esportivo;
   }

@@ -147,33 +147,62 @@ app.post('/api/veiculos', authMiddleware, async (req, res) => {
 
 app.get('/api/veiculos', authMiddleware, async (req, res) => {
     try {
-        const veiculosDoUsuario = await Veiculo.find({ owner: req.userId });
+          const veiculosDoUsuario = await Veiculo.find({
+            $or: [
+                { owner: req.userId },       // Veículos que eu possuo
+                { sharedWith: req.userId }   // Veículos compartilhados comigo
+            ]
+        }).populate('owner', 'email'); // Adiciona os dados do dono (apenas o email) ao resultado
+
         res.json(veiculosDoUsuario);
     } catch (error) {
         res.status(500).json({ error: 'Erro interno ao buscar veículos.' });
     }
 });
 
-
 // =================== ROTAS DE MANUTENÇÃO (AGORA PROTEGIDAS) ===================
 
-app.post('/api/veiculos/:veiculoId/manutencoes', authMiddleware, async (req, res) => {
+app.post('/api/veiculos/:veiculoId/share', authMiddleware, async (req, res) => {
     try {
         const { veiculoId } = req.params;
-        const veiculo = await Veiculo.findOne({ _id: veiculoId, owner: req.userId });
+        const { email: emailToShare } = req.body;
 
-        if (!veiculo) {
-            return res.status(404).json({ error: 'Veículo não encontrado ou não pertence a você.' });
+        if (!emailToShare) {
+            return res.status(400).json({ error: 'O e-mail para compartilhamento é obrigatório.' });
+        }
+
+        // 1. Encontrar o veículo e verificar se o usuário logado é o dono
+        const veiculo = await Veiculo.findById(veiculoId);
+        if (!veiculo || veiculo.owner.toString() !== req.userId) {
+            return res.status(403).json({ error: 'Acesso negado. Você não é o proprietário deste veículo.' });
+        }
+
+        // 2. Encontrar o usuário com quem compartilhar
+        const userToShareWith = await User.findOne({ email: emailToShare });
+        if (!userToShareWith) {
+            return res.status(404).json({ error: `Usuário com o e-mail '${emailToShare}' não encontrado.` });
         }
         
-        const novaManutencaoData = { ...req.body, veiculo: veiculoId };
-        const manutencaoCriada = await Manutencao.create(novaManutencaoData);
-        res.status(201).json(manutencaoCriada);
+        // 3. Validações adicionais
+        if (userToShareWith._id.equals(veiculo.owner)) {
+            return res.status(400).json({ error: 'Você não pode compartilhar um veículo consigo mesmo.' });
+        }
+        if (veiculo.sharedWith.includes(userToShareWith._id)) {
+            return res.status(409).json({ error: 'Este veículo já foi compartilhado com este usuário.' });
+        }
+
+        // 4. Adicionar o ID ao array e salvar
+        veiculo.sharedWith.push(userToShareWith._id);
+        await veiculo.save();
+
+        res.status(200).json({ message: `Veículo ${veiculo.modelo} compartilhado com sucesso com ${emailToShare}.` });
 
     } catch (error) {
-        res.status(500).json({ error: 'Erro interno ao criar manutenção.' });
+        console.error("Erro ao compartilhar veículo:", error);
+        res.status(500).json({ error: 'Erro interno no servidor.' });
     }
 });
+
 
 app.get('/api/veiculos/:veiculoId/manutencoes', authMiddleware, async (req, res) => {
     try {

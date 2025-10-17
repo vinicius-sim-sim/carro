@@ -103,6 +103,17 @@
             <button id="buscarDetalhesBtn">Ver Detalhes Extras (API)</button>
             <div id="detalhesExtrasOutput" class="output">Clique em "Ver Detalhes Extras" após selecionar um veículo.</div>
 
+            <!-- =================== NOVO BLOCO DE MANUTENÇÃO =================== -->
+            <div id="secaoManutencao" style="display: none; margin-top: 20px;">
+                <h3>Histórico de Manutenção</h3>
+                <div id="historicoManutencaoOutput" class="output">
+                    Nenhuma manutenção registrada para este veículo.
+                </div>
+                <button id="adicionarManutencaoBtn" style="margin-top: 10px;">Adicionar Nova Manutenção</button>
+            </div>
+            <!-- ================================================================ -->
+
+
             <h3>Ações Genéricas:</h3>
             <button onclick="chamarInteragir('ligar')">Ligar</button>
             <button onclick="chamarInteragir('desligar')">Desligar</button>

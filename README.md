@@ -6,10 +6,30 @@ Garagem Inteligente - Projeto para gerenciar diferentes tipos de veículos, suas
 
 ## API Endpoints
 
+### Autenticação
+
+*   `POST /api/auth/register`: Registra um novo usuário.
+*   `POST /api/auth/login`: Autentica um usuário e retorna um token JWT.
+
 ### Veículos
 
-*   `GET /api/veiculos`: Lista todos os veículos cadastrados na garagem.
-*   `POST /api/veiculos`: Cria um novo veículo. O corpo da requisição deve ser um JSON com os dados do veículo.
+*   `GET /api/veiculos`: Lista todos os veículos que o usuário possui E os que foram compartilhados com ele. (Requer autenticação)
+*   `POST /api/veiculos`: Cria um novo veículo para o usuário logado. (Requer autenticação)
+*   **`POST /api/veiculos/:veiculoId/share`** (NOVO)
+    *   **Descrição:** Compartilha um veículo que pertence ao usuário logado com outro usuário.
+    *   **Parâmetros da URL:** `veiculoId` (Obrigatório) - O ID do veículo a ser compartilhado.
+    *   **Corpo da Requisição (JSON):**
+        ```json
+        {
+          "email": "email.do.amigo@exemplo.com"
+        }
+        ```
+    *   **Autorização:** Requer token de autenticação. O usuário deve ser o proprietário (`owner`) do veículo.
+    *   **Resposta de Sucesso (200 OK):** Um objeto com uma mensagem de confirmação.
+    *   **Respostas de Erro:**
+        *   `403 Forbidden`: Se o usuário tentando compartilhar não for o proprietário.
+        *   `404 Not Found`: Se o usuário com o e-mail fornecido não for encontrado.
+        *   `409 Conflict`: Se o veículo já estiver compartilhado com o usuário alvo.
 
 ### Previsão do Tempo
 
@@ -17,31 +37,5 @@ Garagem Inteligente - Projeto para gerenciar diferentes tipos de veículos, suas
 
 ### Manutenções (Sub-recurso de Veículos)
 
-As manutenções são gerenciadas como um sub-recurso de um veículo específico.
-
-*   **`GET /api/veiculos/:veiculoId/manutencoes`**
-    *   **Descrição:** Retorna uma lista de todas as manutenções associadas a um veículo específico, ordenadas pela data mais recente.
-    *   **Parâmetros da URL:** `veiculoId` (Obrigatório) - O ID do veículo.
-    *   **Resposta de Sucesso (200 OK):** Um array de objetos de manutenção.
-
-*   **`POST /api/veiculos/:veiculoId/manutencoes`**
-    *   **Descrição:** Cria um novo registro de manutenção para um veículo específico.
-    *   **Parâmetros da URL:** `veiculoId` (Obrigatório) - O ID do veículo.
-    *   **Corpo da Requisição (JSON):**
-        ```json
-        {
-          "descricaoServico": "Troca de pastilhas de freio",
-          "data": "2025-09-10",
-          "custo": 450.50,
-          "quilometragem": 85000
-        }
-        ```
-    *   **Resposta de Sucesso (201 Created):** O objeto da manutenção recém-criada.
-
-## Relacionamento de Dados
-
-Este projeto utiliza um relacionamento **um-para-muitos** entre as coleções `veiculos` e `manutencoes` no MongoDB.
-
--   A coleção `manutencoes` possui um campo `veiculo`.
--   Este campo armazena o `ObjectId` de um documento da coleção `veiculos`.
--   Isso garante que cada manutenção esteja diretamente associada a um, e apenas um, veículo, mantendo a integridade dos dados.
+*   `GET /api/veiculos/:veiculoId/manutencoes`: Retorna as manutenções de um veículo específico. (Requer autenticação e propriedade do veículo)
+*   `POST /api/veiculos/:veiculoId/manutencoes`: Cria um novo registro de manutenção. (Requer autenticação e propriedade do veículo)

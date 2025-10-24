@@ -1,3 +1,5 @@
+// ARQUIVO: server.js (SUBSTITUA TODO O CONTEÚDO)
+
 // ------------------- IMPORTAÇÕES -------------------
 import express from 'express';
 import dotenv from 'dotenv';
@@ -65,20 +67,18 @@ app.get('/', (req, res) => {
   res.send('API da Garagem Inteligente está no ar!');
 });
 
-// =================== [NOVAS] ROTAS DE AUTENTICAÇÃO ===================
+// =================== ROTAS DE AUTENTICAÇÃO ===================
 
-// ROTA DE REGISTRO
 app.post('/api/auth/register', async (req, res) => {
     try {
         const { email, password } = req.body;
-
         if (!email || !password) {
-            return res.status(400).json({ error: 'E-mail e senha são obrigatórios.' });
+            return res.status(400).json({ message: 'E-mail e senha são obrigatórios.' });
         }
 
         const existingUser = await User.findOne({ email });
         if (existingUser) {
-            return res.status(400).json({ error: 'Este e-mail já está em uso.' });
+            return res.status(400).json({ message: 'Este e-mail já está em uso.' });
         }
 
         const salt = await bcrypt.genSalt(10);
@@ -91,46 +91,38 @@ app.post('/api/auth/register', async (req, res) => {
 
     } catch (error) {
         console.error("[ERROR] Erro no registro:", error);
-        res.status(500).json({ error: 'Erro interno no servidor.' });
+        res.status(500).json({ message: 'Erro interno no servidor.' });
     }
 });
 
 
-// ROTA DE LOGIN
 app.post('/api/auth/login', async (req, res) => {
     try {
         const { email, password } = req.body;
-
         if (!email || !password) {
-            return res.status(400).json({ error: 'E-mail e senha são obrigatórios.' });
+            return res.status(400).json({ message: 'E-mail e senha são obrigatórios.' });
         }
 
         const user = await User.findOne({ email });
         if (!user) {
-            return res.status(400).json({ error: 'Credenciais inválidas.' });
+            return res.status(400).json({ message: 'Credenciais inválidas.' });
         }
 
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
-            return res.status(400).json({ error: 'Credenciais inválidas.' });
+            return res.status(400).json({ message: 'Credenciais inválidas.' });
         }
 
-        const token = jwt.sign(
-            { userId: user._id },
-            process.env.JWT_SECRET,
-            { expiresIn: '1h' }
-        );
-        
-        res.status(200).json({ token, user: { email: user.email } }); // Retorna o token e o e-mail
-
+        const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+        res.status(200).json({ token, user: { email: user.email } });
     } catch (error) {
         console.error("[ERROR] Erro no login:", error);
-        res.status(500).json({ error: 'Erro interno no servidor.' });
+        res.status(500).json({ message: 'Erro interno no servidor.' });
     }
 });
 
 
-// =================== ROTAS DE VEÍCULOS (AGORA PROTEGIDAS) ===================
+// =================== ROTAS DE VEÍCULOS ===================
 
 app.post('/api/veiculos', authMiddleware, async (req, res) => {
     try {
@@ -139,85 +131,103 @@ app.post('/api/veiculos', authMiddleware, async (req, res) => {
         res.status(201).json(veiculoCriado);
     } catch (error) {
         if (error.code === 11000) {
-            return res.status(409).json({ error: `Veículo com a placa '${error.keyValue.placa}' já existe.` });
+            return res.status(409).json({ message: `Veículo com a placa '${error.keyValue.placa}' já existe.` });
         }
-        res.status(500).json({ error: 'Erro interno ao criar veículo.' });
+        res.status(500).json({ message: 'Erro interno ao criar veículo.' });
     }
 });
 
 app.get('/api/veiculos', authMiddleware, async (req, res) => {
     try {
-          const veiculosDoUsuario = await Veiculo.find({
-            $or: [
-                { owner: req.userId },       // Veículos que eu possuo
-                { sharedWith: req.userId }   // Veículos compartilhados comigo
-            ]
-        }).populate('owner', 'email'); // Adiciona os dados do dono (apenas o email) ao resultado
+        const veiculosDoUsuario = await Veiculo.find({
+            $or: [{ owner: req.userId }, { sharedWith: req.userId }]
+        })
+        .populate('owner', 'email')
+        .populate('sharedWith', 'email _id'); // Popula os usuários com quem foi compartilhado
 
         res.json(veiculosDoUsuario);
     } catch (error) {
-        res.status(500).json({ error: 'Erro interno ao buscar veículos.' });
+        res.status(500).json({ message: 'Erro interno ao buscar veículos.' });
     }
 });
-
-// =================== ROTAS DE MANUTENÇÃO (AGORA PROTEGIDAS) ===================
 
 app.post('/api/veiculos/:veiculoId/share', authMiddleware, async (req, res) => {
     try {
         const { veiculoId } = req.params;
         const { email: emailToShare } = req.body;
+        if (!emailToShare) return res.status(400).json({ message: 'O e-mail para compartilhamento é obrigatório.' });
 
-        if (!emailToShare) {
-            return res.status(400).json({ error: 'O e-mail para compartilhamento é obrigatório.' });
-        }
-
-        // 1. Encontrar o veículo e verificar se o usuário logado é o dono
         const veiculo = await Veiculo.findById(veiculoId);
-        if (!veiculo || veiculo.owner.toString() !== req.userId) {
-            return res.status(403).json({ error: 'Acesso negado. Você não é o proprietário deste veículo.' });
-        }
+        if (!veiculo || veiculo.owner.toString() !== req.userId) return res.status(403).json({ message: 'Acesso negado. Você não é o proprietário.' });
 
-        // 2. Encontrar o usuário com quem compartilhar
         const userToShareWith = await User.findOne({ email: emailToShare });
-        if (!userToShareWith) {
-            return res.status(404).json({ error: `Usuário com o e-mail '${emailToShare}' não encontrado.` });
-        }
+        if (!userToShareWith) return res.status(404).json({ message: `Usuário com o e-mail '${emailToShare}' não encontrado.` });
         
-        // 3. Validações adicionais
-        if (userToShareWith._id.equals(veiculo.owner)) {
-            return res.status(400).json({ error: 'Você não pode compartilhar um veículo consigo mesmo.' });
-        }
-        if (veiculo.sharedWith.includes(userToShareWith._id)) {
-            return res.status(409).json({ error: 'Este veículo já foi compartilhado com este usuário.' });
-        }
+        if (userToShareWith._id.equals(veiculo.owner)) return res.status(400).json({ message: 'Você não pode compartilhar um veículo consigo mesmo.' });
+        if (veiculo.sharedWith.includes(userToShareWith._id)) return res.status(409).json({ message: 'Este veículo já foi compartilhado com este usuário.' });
 
-        // 4. Adicionar o ID ao array e salvar
         veiculo.sharedWith.push(userToShareWith._id);
         await veiculo.save();
-
-        res.status(200).json({ message: `Veículo ${veiculo.modelo} compartilhado com sucesso com ${emailToShare}.` });
-
+        res.status(200).json({ message: `Veículo compartilhado com sucesso com ${emailToShare}.` });
     } catch (error) {
-        console.error("Erro ao compartilhar veículo:", error);
-        res.status(500).json({ error: 'Erro interno no servidor.' });
+        res.status(500).json({ message: 'Erro interno no servidor.' });
     }
 });
 
+// [NOVA ROTA - DESAFIO]
+app.post('/api/veiculos/:veiculoId/unshare', authMiddleware, async (req, res) => {
+    try {
+        const { veiculoId } = req.params;
+        const { userIdToRemove } = req.body;
+        if (!userIdToRemove) {
+            return res.status(400).json({ message: 'ID do usuário a ser removido é obrigatório.' });
+        }
+
+        const veiculo = await Veiculo.findById(veiculoId);
+        if (!veiculo || veiculo.owner.toString() !== req.userId) {
+            return res.status(403).json({ message: 'Acesso negado. Você não é o proprietário deste veículo.' });
+        }
+
+        // Use o operador $pull do Mongoose para remover o ID do array
+        await Veiculo.updateOne(
+            { _id: veiculoId },
+            { $pull: { sharedWith: userIdToRemove } }
+        );
+        
+        res.status(200).json({ message: 'Compartilhamento removido com sucesso.' });
+    } catch (error) {
+        console.error("Erro ao remover compartilhamento:", error);
+        res.status(500).json({ message: 'Erro interno no servidor.' });
+    }
+});
+
+
+// =================== ROTAS DE MANUTENÇÃO ===================
+
+app.post('/api/veiculos/:veiculoId/manutencoes', authMiddleware, async (req, res) => {
+    try {
+        const { veiculoId } = req.params;
+        const veiculo = await Veiculo.findOne({ _id: veiculoId, owner: req.userId });
+        if (!veiculo) return res.status(403).json({ message: 'Veículo não encontrado ou você não tem permissão para adicionar manutenções.' });
+        
+        const novaManutencaoData = { ...req.body, veiculo: veiculoId };
+        const manutencaoCriada = await Manutencao.create(novaManutencaoData);
+        res.status(201).json(manutencaoCriada);
+    } catch (error) {
+        res.status(500).json({ message: 'Erro interno ao criar manutenção.' });
+    }
+});
 
 app.get('/api/veiculos/:veiculoId/manutencoes', authMiddleware, async (req, res) => {
     try {
         const { veiculoId } = req.params;
         const veiculo = await Veiculo.findOne({ _id: veiculoId, owner: req.userId });
-
-        if (!veiculo) {
-            return res.status(404).json({ error: 'Veículo não encontrado ou não pertence a você.' });
-        }
+        if (!veiculo) return res.status(403).json({ message: 'Veículo não encontrado ou você não tem permissão para ver estas manutenções.' });
 
         const manutencoes = await Manutencao.find({ veiculo: veiculoId }).sort({ data: -1 });
         res.status(200).json(manutencoes);
-    } catch (error)
-    {
-        res.status(500).json({ error: 'Erro interno ao buscar manutenções.' });
+    } catch (error) {
+        res.status(500).json({ message: 'Erro interno ao buscar manutenções.' });
     }
 });
 
@@ -227,7 +237,7 @@ app.get('/api/previsao/:cidade', async (req, res) => {
   const { cidade } = req.params;
   const apiKey = process.env.OPENWEATHER_API_KEY;
   if (!apiKey) {
-    return res.status(500).json({ error: 'Chave da API de clima não configurada.' });
+    return res.status(500).json({ message: 'Chave da API de clima não configurada.' });
   }
   const weatherAPIUrl = `https://api.openweathermap.org/data/2.5/forecast?q=${cidade}&appid=${apiKey}&units=metric&lang=pt_br`;
   try {
@@ -236,7 +246,7 @@ app.get('/api/previsao/:cidade', async (req, res) => {
   } catch (error) {
     const status = error.response?.status || 500;
     const message = error.response?.data?.message || 'Erro ao buscar previsão.';
-    res.status(status).json({ error: message });
+    res.status(status).json({ message: message });
   }
 });
 

@@ -1,3 +1,5 @@
+<!-- ARQUIVO: index.html (SUBSTITUA TODO O CONTEÚDO) -->
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -89,8 +91,6 @@
             <button id="logoutBtn">Sair</button>
         </div>
         
-        <!-- TODO O CONTEÚDO DA GARAGEM FICA AQUI DENTRO -->
-        
         <div class="garagem-controle">
             <h2>Controle da Garagem</h2>
             <p>Selecione ou crie um veículo para interagir:</p>
@@ -103,7 +103,6 @@
             <button id="buscarDetalhesBtn">Ver Detalhes Extras (API)</button>
             <div id="detalhesExtrasOutput" class="output">Clique em "Ver Detalhes Extras" após selecionar um veículo.</div>
 
-            <!-- =================== NOVO BLOCO DE MANUTENÇÃO =================== -->
             <div id="secaoManutencao" style="display: none; margin-top: 20px;">
                 <h3>Histórico de Manutenção</h3>
                 <div id="historicoManutencaoOutput" class="output">
@@ -111,8 +110,12 @@
                 </div>
                 <button id="adicionarManutencaoBtn" style="margin-top: 10px;">Adicionar Nova Manutenção</button>
             </div>
-            <!-- ================================================================ -->
 
+            <!-- [NOVO CONTAINER - DESAFIO] -->
+            <div id="secaoCompartilhamento" style="display: none; margin-top: 20px;">
+                <h3>Gerenciar Compartilhamento</h3>
+                <div id="compartilhamentoOutput" class="output">Este veículo não está compartilhado.</div>
+            </div>
 
             <h3>Ações Genéricas:</h3>
             <button onclick="chamarInteragir('ligar')">Ligar</button>

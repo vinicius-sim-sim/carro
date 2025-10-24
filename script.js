@@ -1,4 +1,4 @@
-// ARQUIVO: script.js (VERSÃO COMPLETA E FINAL)
+// ARQUIVO: script.js (VERSÃO CORRIGIDA E COMPLETA)
 
 // --- URL DO BACKEND ---
 const BACKEND_URL = 'https://carro-8fvo.onrender.com';
@@ -124,7 +124,6 @@ async function carregarVeiculosDoBackend() {
     const headers = getAuthHeaders();
     if (!headers) return;
 
-    // Guarda o ID do veículo selecionado para tentar reselecioná-lo após recarregar
     const veiculoSelecionadoId = veiculoSelecionado ? veiculoSelecionado._id : null;
 
     divInformacoesVeiculo.innerHTML = '<p>Carregando veículos...</p>';
@@ -136,10 +135,33 @@ async function carregarVeiculosDoBackend() {
         }
         if (!response.ok) throw new Error(`Erro ao buscar veículos: ${response.statusText}`);
         
-        // A API já popula os dados, então podemos usar o JSON diretamente
-        garagemDeVeiculos = await response.json();
+        const veiculosDoDb = await response.json();
+        
+        // ** [CORREÇÃO CRÍTICA] ** Restaurando a criação de instâncias de classes no frontend
+        garagemDeVeiculos = veiculosDoDb.map(json => {
+            let veiculo;
+            switch (json.tipoVeiculo) {
+                case 'Carro': 
+                    veiculo = Carro.fromJSON(json);
+                    break;
+                case 'CarroEsportivo': 
+                    veiculo = CarroEsportivo.fromJSON(json);
+                    break;
+                case 'Caminhao': 
+                    veiculo = Caminhao.fromJSON(json);
+                    break;
+                default: 
+                    console.warn(`Tipo de veículo desconhecido: ${json.tipoVeiculo}`);
+                    return null;
+            }
+            // Anexa as informações populadas (owner, sharedWith) à instância da classe
+            if (veiculo) {
+                veiculo.owner = json.owner; 
+                veiculo.sharedWith = json.sharedWith;
+            }
+            return veiculo;
+        }).filter(v => v);
 
-        // Tenta encontrar o veículo que estava selecionado antes ou pega o primeiro
         veiculoSelecionado = garagemDeVeiculos.find(v => v._id === veiculoSelecionadoId) || (garagemDeVeiculos.length > 0 ? garagemDeVeiculos[0] : null);
         
         atualizarExibicaoGeral();
@@ -147,7 +169,9 @@ async function carregarVeiculosDoBackend() {
     } catch (error) {
         console.error("Erro ao carregar veículos:", error);
         divInformacoesVeiculo.innerHTML = `<p style="color:red;"><b>Erro ao carregar garagem:</b> ${error.message}</p>`;
-        atualizarExibicaoGeral(); // Limpa as listas em caso de erro
+        garagemDeVeiculos = [];
+        veiculoSelecionado = null;
+        atualizarExibicaoGeral();
     }
 }
 
@@ -172,8 +196,8 @@ async function criarVeiculo(dados) {
 
 function atualizarExibicaoGeral() {
     if (veiculoSelecionado) {
-        const infoBasica = `${veiculoSelecionado.marca} ${veiculoSelecionado.modelo} | Placa: ${veiculoSelecionado.placa} | Ano: ${veiculoSelecionado.ano}`;
-        divInformacoesVeiculo.innerHTML = `<p>${infoBasica}</p>`;
+        // ** [CORREÇÃO] ** Voltando a usar o método .exibirInformacoes()
+        divInformacoesVeiculo.innerHTML = `<p>${veiculoSelecionado.exibirInformacoes()}</p>`;
         
         secaoManutencao.style.display = 'block';
         secaoCompartilhamento.style.display = 'block';
@@ -190,11 +214,11 @@ function atualizarExibicaoGeral() {
         const isOwner = v.owner && v.owner.email === loggedInUserEmail;
         const shareButton = isOwner ? `<button onclick="compartilharVeiculo('${v._id}')">Compartilhar</button>` : '';
         const sharedLabel = !isOwner ? `<span style="font-size: 0.8em; color: #555;"> (Compartilhado por ${v.owner?.email || 'desconhecido'})</span>` : '';
-        const info = `${v.marca} ${v.modelo} | Placa: ${v.placa}`;
-        return `<li>${info} ${sharedLabel}<button onclick="selecionarVeiculoPorId('${v._id}')">Selecionar</button>${shareButton}</li>`;
+        // ** [CORREÇÃO] ** Usando o método .exibirInformacoes() novamente
+        return `<li>${v.exibirInformacoes()} ${sharedLabel}<button onclick="selecionarVeiculoPorId('${v._id}')">Selecionar</button>${shareButton}</li>`;
     };
 
-    const carrosHTML = garagemDeVeiculos.filter(v => v.tipoVeiculo === 'Carro').map(gerarHtmlVeiculo).join('');
+    const carrosHTML = garagemDeVeiculos.filter(v => v.tipoVeiculo === 'Carro' || !v.tipoVeiculo).map(gerarHtmlVeiculo).join('');
     outputCarro.innerHTML = carrosHTML ? `<ul>${carrosHTML}</ul>` : "Nenhum Carro Padrão na garagem.";
 
     const esportivosHTML = garagemDeVeiculos.filter(v => v.tipoVeiculo === 'CarroEsportivo').map(gerarHtmlVeiculo).join('');
@@ -211,10 +235,28 @@ function selecionarVeiculoPorId(id) {
 }
 
 function chamarInteragir(acao) {
-    if (!veiculoSelecionado) return alert("Selecione um veículo.");
-    // Como não usamos mais as classes no front, a interação fica simulada
-    console.log(`Ação '${acao}' chamada para o veículo ${veiculoSelecionado.placa}`);
-    alert(`Ação '${acao}' executada (simulação no frontend).`);
+    if (!veiculoSelecionado) {
+        return alert("Por favor, selecione um veículo primeiro.");
+    }
+    try {
+        // ** [CORREÇÃO] ** Restaurando a chamada real aos métodos da classe
+        if (typeof veiculoSelecionado[acao] === 'function') {
+            if (acao === 'carregar' || acao === 'descarregar') {
+                const peso = parseInt(document.getElementById("pesoInteracao").value, 10);
+                if (isNaN(peso) || peso <= 0) return alert("Por favor, insira um peso válido.");
+                veiculoSelecionado[acao](peso);
+            } else {
+                veiculoSelecionado[acao]();
+            }
+            // Atualiza a tela inteira para refletir o novo estado do objeto
+            atualizarExibicaoGeral();
+        } else {
+             alert(`Ação '${acao}' não é válida para este tipo de veículo.`);
+        }
+    } catch (error) {
+        console.error(`Erro na ação '${acao}':`, error);
+        alert(`Ocorreu um erro: ${error.message}`);
+    }
 }
 
 function criarCarroEsportivo() {
@@ -241,7 +283,7 @@ async function compartilharVeiculo(veiculoId) {
         const resultado = await response.json();
         if (!response.ok) throw new Error(resultado.message);
         alert(resultado.message);
-        await carregarVeiculosDoBackend(); // Recarrega para obter a lista atualizada
+        await carregarVeiculosDoBackend(); 
     } catch (error) {
         alert(`Erro ao compartilhar: ${error.message}`);
     }
@@ -271,9 +313,11 @@ async function handleUnshare(veiculoId, userIdToRemove) {
 function exibirGerenciamentoCompartilhamento(veiculo) {
     const loggedInUserEmail = localStorage.getItem('userEmail');
     if (!veiculo || !veiculo.owner || loggedInUserEmail !== veiculo.owner.email) {
-        compartilhamentoOutput.innerHTML = 'Apenas o proprietário pode gerenciar os compartilhamentos.';
+        secaoCompartilhamento.style.display = 'none'; // Apenas esconde, não mostra mensagem
         return;
     }
+    
+    secaoCompartilhamento.style.display = 'block';
 
     if (!veiculo.sharedWith || veiculo.sharedWith.length === 0) {
         compartilhamentoOutput.innerHTML = 'Este veículo não está compartilhado.';
@@ -283,7 +327,7 @@ function exibirGerenciamentoCompartilhamento(veiculo) {
     const listaHTML = veiculo.sharedWith.map(user => 
         `<li>
             ${user.email} 
-            <button onclick="handleUnshare('${veiculo._id}', '${user._id}')" style="background-color: #d9534f; margin-left: 10px; padding: 2px 8px; font-size: 0.8em;">X</button>
+            <button onclick="handleUnshare('${veiculo._id}', '${user._id}')" style="background-color: #d9534f; margin-left: 10px; padding: 2px 8px; font-size: 0.8em;">Remover</button>
         </li>`
     ).join('');
     compartilhamentoOutput.innerHTML = `<ul>${listaHTML}</ul>`;
@@ -294,17 +338,17 @@ async function carregarEExibirManutencoes(veiculoId) {
     if (!headers) return;
     historicoManutencaoOutput.innerHTML = 'Carregando histórico...';
     try {
-        const response = await fetch(`${BACKEND_URL}/api/veiculos/${veiculoId}/manutencoes`, { headers });
-        const loggedInUserEmail = localStorage.getItem('userEmail');
         const veiculo = garagemDeVeiculos.find(v => v._id === veiculoId);
+        const loggedInUserEmail = localStorage.getItem('userEmail');
         
         if (veiculo && veiculo.owner.email !== loggedInUserEmail) {
             adicionarManutencaoBtn.style.display = 'none';
-            historicoManutencaoOutput.innerHTML = 'Você não tem permissão para ver ou adicionar manutenções neste veículo compartilhado.';
+            historicoManutencaoOutput.innerHTML = 'Apenas o proprietário pode ver e adicionar manutenções.';
             return;
         }
         
         adicionarManutencaoBtn.style.display = 'inline-block';
+        const response = await fetch(`${BACKEND_URL}/api/veiculos/${veiculoId}/manutencoes`, { headers });
         if (!response.ok) throw new Error('Falha ao buscar manutenções.');
 
         const manutencoes = await response.json();
@@ -386,7 +430,7 @@ async function buscarEExibirPrevisao() {
 }
 
 function exibirPrevisaoFormatada(data) {
-    outputPrevisao.innerHTML = `<h3>Previsão para ${data.city.name}</h3>`;
+    let htmlFinal = `<h3>Previsão para ${data.city.name}</h3>`;
     const previsoesDiarias = {};
     data.list.forEach(previsao => {
         const dataObj = new Date(previsao.dt * 1000);
@@ -404,7 +448,6 @@ function exibirPrevisaoFormatada(data) {
         previsoesDiarias[dia].icons[icon] = (previsoesDiarias[dia].icons[icon] || 0) + 1;
     });
 
-    let htmlFinal = `<h3>Previsão para ${data.city.name}</h3>`;
     for (const dia in previsoesDiarias) {
         const diaInfo = previsoesDiarias[dia];
         const temp_min = Math.min(...diaInfo.temps).toFixed(0);
@@ -430,4 +473,4 @@ function exibirPrevisaoFormatada(data) {
 }
 
 buscarPrevisaoBtn.addEventListener('click', buscarEExibirPrevisao);
-cidadeInput.addEventListener('keyup', (event) => { if (event.key === "Enter") buscarEExibirPrevisao(); });
+cidadeInput.addEventListener('keyup', (event) => { if (event.key === "Enter") buscarEExibirPrevisao(); });```

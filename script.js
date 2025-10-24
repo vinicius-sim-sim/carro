@@ -473,4 +473,4 @@ function exibirPrevisaoFormatada(data) {
 }
 
 buscarPrevisaoBtn.addEventListener('click', buscarEExibirPrevisao);
-cidadeInput.addEventListener('keyup', (event) => { if (event.key === "Enter") buscarEExibirPrevisao(); });```
+cidadeInput.addEventListener('keyup', (event) => { if (event.key === "Enter") buscarEExibirPrevisao(); });

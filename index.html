@@ -1,64 +1,24 @@
-<!-- ARQUIVO: index.html (SUBSTITUA TODO O CONTEÚDO) -->
+<!-- index.html -->
 
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Garagem Inteligente - Login</title>
+    <title>Garagem Inteligente</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <style>
-        /* Estilos para garantir a troca de telas */
         #authContainer { display: block; }
         #garageContainer { display: none; }
-
-        /* Estilos básicos para os formulários de autenticação */
-        .auth-form {
-            max-width: 400px;
-            margin: 50px auto;
-            padding: 25px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            background-color: #ffffff;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        }
-        .auth-form h2 {
-            text-align: center;
-            margin-bottom: 20px;
-            color: #333;
-        }
-        .auth-form input {
-            display: block;
-            width: calc(100% - 22px);
-            padding: 10px;
-            margin-bottom: 15px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
-        .auth-form button {
-            width: 100%;
-        }
-        .auth-form p {
-            text-align: center;
-            margin-top: 15px;
-            font-size: 0.9em;
-        }
-        .auth-form a {
-            color: #007bff;
-            cursor: pointer;
-            text-decoration: underline;
-        }
-        #userInfo {
-            text-align: right;
-            padding: 15px;
-            background-color: #f8f9fa;
-            border-bottom: 1px solid #dee2e6;
-        }
-        #userInfo span {
-            margin-right: 15px;
-            font-weight: bold;
-        }
+        .auth-form { max-width: 400px; margin: 50px auto; padding: 25px; border: 1px solid #ddd; border-radius: 8px; background-color: #ffffff; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        .auth-form h2 { text-align: center; margin-bottom: 20px; color: #333; }
+        .auth-form input { display: block; width: calc(100% - 22px); padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px; }
+        .auth-form button { width: 100%; }
+        .auth-form p { text-align: center; margin-top: 15px; font-size: 0.9em; }
+        .auth-form a { color: #007bff; cursor: pointer; text-decoration: underline; }
+        #userInfo { text-align: right; padding: 15px; background-color: #f8f9fa; border-bottom: 1px solid #dee2e6; }
+        #userInfo span { margin-right: 15px; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -91,32 +51,43 @@
             <button id="logoutBtn">Sair</button>
         </div>
         
+        <!-- Formulário de Criação de Veículo -->
+        <div class="container">
+            <h2>Adicionar Novo Veículo à Garagem</h2>
+            <form id="formCriarVeiculo" enctype="multipart/form-data" style="max-width: 500px; margin: auto; text-align: left;">
+                <input type="text" name="marca" placeholder="Marca (ex: Volkswagen)" required style="width: 95%; padding: 8px; margin-bottom: 10px;">
+                <input type="text" name="modelo" placeholder="Modelo (ex: Gol)" required style="width: 95%; padding: 8px; margin-bottom: 10px;">
+                <input type="text" name="placa" placeholder="Placa (ex: ABC1D23)" required style="width: 95%; padding: 8px; margin-bottom: 10px;">
+                <input type="number" name="ano" placeholder="Ano (ex: 2020)" required style="width: 95%; padding: 8px; margin-bottom: 10px;">
+                <input type="text" name="cor" placeholder="Cor (ex: Branco)" required style="width: 95%; padding: 8px; margin-bottom: 10px;">
+                <select name="tipoVeiculo" required style="width: 100%; padding: 8px; margin-bottom: 10px;">
+                    <option value="" disabled selected>-- Selecione o Tipo de Veículo --</option>
+                    <option value="Carro">Carro Padrão</option>
+                    <option value="CarroEsportivo">Carro Esportivo</option>
+                    <option value="Caminhao">Caminhão</option>
+                </select>
+                <label for="imagemVeiculo" style="text-align: left; min-width: 0;">Foto do Veículo (opcional):</label>
+                <input type="file" name="imagem" id="imagemVeiculo" accept="image/*" style="display: block; margin-top: 5px; margin-bottom: 15px;">
+                <button type="submit" style="width: 100%;">Adicionar Veículo à Garagem</button>
+            </form>
+        </div>
+
         <div class="garagem-controle">
             <h2>Controle da Garagem</h2>
-            <p>Selecione ou crie um veículo para interagir:</p>
-
+            <p>Selecione um veículo da sua lista para interagir:</p>
             <h3>Veículo Selecionado:</h3>
-            <div id="informacoesVeiculo" class="output info-central">
-                Nenhum veículo selecionado.
-            </div>
-
+            <div id="informacoesVeiculo" class="output info-central">Nenhum veículo selecionado.</div>
             <button id="buscarDetalhesBtn">Ver Detalhes Extras (API)</button>
-            <div id="detalhesExtrasOutput" class="output">Clique em "Ver Detalhes Extras" após selecionar um veículo.</div>
-
+            <div id="detalhesExtrasOutput" class="output">...</div>
             <div id="secaoManutencao" style="display: none; margin-top: 20px;">
                 <h3>Histórico de Manutenção</h3>
-                <div id="historicoManutencaoOutput" class="output">
-                    Nenhuma manutenção registrada para este veículo.
-                </div>
-                <button id="adicionarManutencaoBtn" style="margin-top: 10px;">Adicionar Nova Manutenção</button>
+                <div id="historicoManutencaoOutput" class="output"></div>
+                <button id="adicionarManutencaoBtn">Adicionar Manutenção</button>
             </div>
-
-            <!-- [NOVO CONTAINER - DESAFIO] -->
             <div id="secaoCompartilhamento" style="display: none; margin-top: 20px;">
                 <h3>Gerenciar Compartilhamento</h3>
-                <div id="compartilhamentoOutput" class="output">Este veículo não está compartilhado.</div>
+                <div id="compartilhamentoOutput" class="output"></div>
             </div>
-
             <h3>Ações Genéricas:</h3>
             <button onclick="chamarInteragir('ligar')">Ligar</button>
             <button onclick="chamarInteragir('desligar')">Desligar</button>
@@ -140,31 +111,23 @@
                 <input type="text" id="cidadeDestino" placeholder="Digite o nome da cidade">
                 <button id="buscarPrevisaoBtn">Buscar Clima</button>
             </div>
-            <div id="outputPrevisao" class="output-previsao">
-                Aguardando a busca por uma cidade...
-            </div>
+            <div id="outputPrevisao" class="output-previsao">Aguardando a busca...</div>
         </div>
+        <hr>
         
-        <hr>
-
         <div class="container veiculo-container">
-            <h2>Carro Padrão</h2>
-            <div id="outputCarro" class="output">Nenhum carro na garagem.</div>
-            <button onclick="criarVeiculo({ placa: prompt('Placa para o carro padrão:'), marca: 'Volkswagen', modelo: 'Gol', ano: 2020, cor: 'Branco', tipoVeiculo: 'Carro', apiId: 'carro-padrao-01' })">Criar Carro Padrão</button>
+            <h2>Carros Padrão</h2>
+            <div id="outputCarro" class="output"></div>
         </div>
         <hr>
-
         <div class="container veiculo-container">
-            <h2>Carro Esportivo</h2>
-            <div id="outputEsportivo" class="output">Nenhum esportivo na garagem.</div>
-            <button onclick="criarCarroEsportivo()">Criar Carro Esportivo</button>
+            <h2>Carros Esportivos</h2>
+            <div id="outputEsportivo" class="output"></div>
         </div>
         <hr>
-
         <div class="container veiculo-container">
-            <h2>Caminhão</h2>
-            <div id="outputCaminhao" class="output">Nenhum caminhão na garagem.</div>
-            <button onclick="criarCaminhao()">Criar Caminhão</button>
+            <h2>Caminhões</h2>
+            <div id="outputCaminhao" class="output"></div>
         </div>
     </div>
 
